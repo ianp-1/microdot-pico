@@ -5,8 +5,6 @@ export default class EQController {
     this.bands = ["low", "mid", "high"];
 
     this.setupSliders();
-    // Remove the broken fetchCurrentEQ call
-    this.requestInitialValues();
   }
 
   setupSliders() {

@@ -20,10 +20,10 @@ export default class AudioDashboardApp {
     this.wsManager = new WebSocketManager(`ws://${location.host}/ws`, {
       dial: (message) => this.handleDialUpdate(message),
       mode: (message) => this.handleModeUpdate(message),
+      initial_state: (message) => this.handleInitialState(message), // Add this handler
       onOpen: () => {
         console.log("Dashboard WebSocket connected");
-        // Request initial EQ values when connected
-        this.requestInitialData();
+        // Don't request initial data - server sends it automatically
       },
       onClose: () => console.log("Dashboard WebSocket disconnected"),
       onError: (error) => console.error("Dashboard WebSocket error:", error),
@@ -44,9 +44,21 @@ export default class AudioDashboardApp {
     console.log("Audio Dashboard initialized");
   }
 
-  requestInitialData() {
-    // Request current EQ and mode values
-    this.wsManager.send({ action: "get_current_eq" });
+  // Add this new method to handle initial state
+  handleInitialState(message) {
+    console.log("Handling initial state:", message);
+
+    // Update mode first
+    if (this.modeManager && message.mode) {
+      console.log("Setting mode to:", message.mode);
+      this.modeManager.updateMode(message.mode);
+    }
+
+    // Update EQ values
+    if (this.eqController && message.eq) {
+      console.log("Setting EQ to:", message.eq);
+      this.eqController.updateFromServer(message.eq);
+    }
   }
 
   handleDialUpdate(message) {

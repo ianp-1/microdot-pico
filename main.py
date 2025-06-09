@@ -29,46 +29,56 @@ def toggle_mode(request):
     mode = model.voice_mode_manager.toggle_mode()
     return f'<span id="currentMode">Current Mode: {mode}</span>'
 
-# @app.route('/ws')
-# @with_websocket
-# async def websocket_handler(request, ws):
-#     model.ws_clients.add(ws)
-#     try:
-#         while True:
-#             await ws.receive()  # or handle incoming messages
-#     except:
-#         pass
-#     finally:
-#         model.ws_clients.discard(ws)
+@app.route('/current-state-json')
+def current_state_json(request):
+    """Return current system state as JSON"""
+    return {
+        'mode': model.voice_mode_manager.current_mode,
+        'eq': {
+            'low': model.eq_processor.live_db['low'],
+            'mid': model.eq_processor.live_db['mid'], 
+            'high': model.eq_processor.live_db['high']
+        }
+    }
+
 @app.route('/ws')
 @with_websocket
 async def websocket_handler(request, ws):
     model.ws_manager.add_client(ws)
+    
+    # Send initial state to newly connected client
+    try:
+        import json
+        initial_state = {
+            'type': 'initial_state',
+            'mode': model.voice_mode_manager.current_mode,
+            'eq': {
+                'low': model.eq_processor.live_db['low'],
+                'mid': model.eq_processor.live_db['mid'], 
+                'high': model.eq_processor.live_db['high']
+            }
+        }
+        await ws.send(json.dumps(initial_state))
+        print(f"[WS] Sent initial state to client: {initial_state}")
+    except Exception as e:
+        print(f"[WS] Error sending initial state: {e}")
+    
     try:
         while True:
             message = await ws.receive()
             
             if message:
-                print(f"[WS] Received: {message}")
                 try:
                     import json
                     
                     # Handle URL-encoded form data from HTMX
-                    if isinstance(message, str):
-                        if message.startswith('{'):
-                            # JSON data
-                            data = json.loads(message)
-                        elif '=' in message:
-                            # URL-encoded form data
-                            data = dict(item.split('=', 1) for item in message.split('&'))
-                        else:
-                            print(f"[WS] Unknown message format: {message}")
-                            continue
+                    if isinstance(message, str) and '=' in message and not message.startswith('{'):
+                        data = dict(item.split('=') for item in message.split('&'))
                     else:
-                        data = message
+                        # Handle JSON data
+                        data = json.loads(message)
                     
                     action = data.get('action')
-                    print(f"[WS] Action: {action}")
                     
                     if action == 'toggle_voice_mode':
                         new_mode = model.voice_mode_manager.toggle_mode()
@@ -76,24 +86,27 @@ async def websocket_handler(request, ws):
                         
                     elif action == 'eq_update':
                         band = data.get('band')
-                        value = float(data.get('value', 0))
+                        value = data.get('value')
                         if band and value is not None:
                             model.set_target_eq(band, value)
                             print(f"[WS] EQ update: {band} = {value}dB")
                             
-                    elif action == 'get_current_eq':
-                        # Send current EQ values back to client
-                        eq_data = {
-                            'type': 'dial',
-                            'low': model.eq_processor.live_db['low'],
-                            'mid': model.eq_processor.live_db['mid'],
-                            'high': model.eq_processor.live_db['high']
+                    elif action == 'get_current_state':
+                        # Send current state back to client
+                        state_data = {
+                            'type': 'initial_state',
+                            'mode': model.voice_mode_manager.current_mode,
+                            'eq': {
+                                'low': model.eq_processor.live_db['low'],
+                                'mid': model.eq_processor.live_db['mid'], 
+                                'high': model.eq_processor.live_db['high']
+                            }
                         }
-                        await ws.send(json.dumps(eq_data))
-                        print(f"[WS] Sent current EQ values")
+                        await ws.send(json.dumps(state_data))
+                        print(f"[WS] Sent current state")
                         
-                except Exception as e:
-                    print(f"[WS] Error processing message: {e}")
+                except (ValueError, json.JSONDecodeError) as e:
+                    print(f"[WS] Error parsing message: {e}")
                     
     except Exception as e:
         print(f"[WS] Client disconnected: {e}")

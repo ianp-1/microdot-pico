@@ -1,0 +1,32 @@
+import json
+import uasyncio as asyncio
+
+class WebSocketManager:
+    def __init__(self):
+        self.clients = set()
+    
+    def add_client(self, ws):
+        self.clients.add(ws)
+    
+    def remove_client(self, ws):
+        self.clients.discard(ws)
+    
+    def broadcast_mode_change(self, mode):
+        msg = json.dumps({"type": "mode", "mode": mode})
+        self._broadcast(msg)
+    
+    def broadcast_eq_update(self, eq_data):
+        msg = json.dumps({
+            "type": "dial",
+            "low": eq_data["low"],
+            "mid": eq_data["mid"],
+            "high": eq_data["high"]
+        })
+        self._broadcast(msg)
+    
+    def _broadcast(self, message):
+        for ws in list(self.clients):
+            try:
+                asyncio.create_task(ws.send(message))
+            except:
+                self.clients.discard(ws)

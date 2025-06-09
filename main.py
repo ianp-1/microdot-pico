@@ -17,6 +17,12 @@ mm_wlan.connect_to_network(ssid, password)
 def index(request):
     return send_file('templates/dashboard.html')
 
+@app.post('/toggle-voice-mode')
+def toggle_mode(request):
+    mode = model.toggle_voice_mode()
+    return f'<span id="currentMode">Current Mode: {mode}</span>'
+
+
 @app.route('/static/<path:path>')
 def static_files(request, path):
     return send_file(f'static/{path}')
@@ -24,6 +30,7 @@ def static_files(request, path):
 
 # server start
 async def main():
+    asyncio.create_task(model.monitor_dials_loop())
     await app.start_server(port=80)
 
 # run everything

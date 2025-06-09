@@ -4,37 +4,53 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css" />
-    <script src="/static/script.js" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@0.1.0/dist/chartjs-plugin-dragData.min.js"></script>
     <script src="/static/htmx.min.js" defer></script>
+    <script src="/static/script.js" defer></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --color-clifford: #da373d;
+      }
+    </style>
   </head>
-  <body>
-    <ul>
-      <li><a href="/" class="active">Dashboard</a></li>
-    </ul>
-    <div class="container">
-      <div class="led eq-section">
-        <h2>EQ Settings</h2>
-        <div class="eq-visualization">
-          <canvas id="eqCanvas" width="300" height="200"></canvas>
-          <div class="eq-values">
-            <div class="eq-value">
-              <span class="eq-label">Low (80Hz)</span>
-              <span id="lowValue">0.0dB</span>
+  <body class="bg-gray-900 text-white font-sans">
+    <!-- Main Container -->
+    <div class="max-w-7xl mx-auto p-8 flex flex-wrap gap-8 justify-center">
+      <!-- EQ Section -->
+      <div class="bg-gray-800 rounded-xl shadow-md p-6 w-full max-w-md">
+        <h2 class="text-xl font-semibold text-emerald-400 mb-4">EQ Settings</h2>
+        <div class="mb-4">
+          <canvas id="eqChart" width="400" height="200"></canvas>
+          <div class="grid grid-cols-3 gap-2 text-center mb-4">
+            <div
+              class="bg-emerald-900 bg-opacity-10 border border-emerald-400 p-1 rounded"
+            >
+              <span class="text-xs text-emerald-400 block">Low (80Hz)</span>
+              <span id="lowValue" class="text-sm">0.0dB</span>
             </div>
-            <div class="eq-value">
-              <span class="eq-label">Mid (1kHz)</span>
-              <span id="midValue">0.0dB</span>
+            <div
+              class="bg-emerald-900 bg-opacity-10 border border-emerald-400 p-1 rounded"
+            >
+              <span class="text-xs text-emerald-400 block">Mid (1kHz)</span>
+              <span id="midValue" class="text-sm">0.0dB</span>
             </div>
-            <div class="eq-value">
-              <span class="eq-label">High (8kHz)</span>
-              <span id="highValue">0.0dB</span>
+            <div
+              class="bg-emerald-900 bg-opacity-10 border border-emerald-400 p-1 rounded"
+            >
+              <span class="text-xs text-emerald-400 block">High (8kHz)</span>
+              <span id="highValue" class="text-sm">0.0dB</span>
             </div>
           </div>
         </div>
-        <div class="eq-controls-traditional">
-          <div class="eq-band">
-            <label for="lowSlider">Low</label>
+
+        <!-- Sliders -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <label for="lowSlider" class="text-emerald-400 font-semibold"
+              >Low</label
+            >
             <input
               type="range"
               id="lowSlider"
@@ -43,16 +59,20 @@
               max="12"
               value="0"
               step="0.1"
-              class="slider"
+              class="w-3/4 accent-emerald-500"
               hx-post="/update-eq"
               hx-trigger="input"
               hx-vals='{"band":"low"}'
               hx-target="#lowValue"
               hx-swap="outerHTML"
+              oninput="updateEQFromSlider('low', this.value)"
             />
           </div>
-          <div class="eq-band">
-            <label for="midSlider">Mid</label>
+
+          <div class="flex items-center justify-between">
+            <label for="midSlider" class="text-emerald-400 font-semibold"
+              >Mid</label
+            >
             <input
               type="range"
               id="midSlider"
@@ -61,16 +81,20 @@
               max="12"
               value="0"
               step="0.1"
-              class="slider"
+              class="w-3/4 accent-emerald-500"
               hx-post="/update-eq"
               hx-trigger="input"
               hx-vals='{"band":"mid"}'
               hx-target="#midValue"
               hx-swap="outerHTML"
+              oninput="updateEQFromSlider('mid', this.value)"
             />
           </div>
-          <div class="eq-band">
-            <label for="highSlider">High</label>
+
+          <div class="flex items-center justify-between">
+            <label for="highSlider" class="text-emerald-400 font-semibold"
+              >High</label
+            >
             <input
               type="range"
               id="highSlider"
@@ -79,36 +103,62 @@
               max="12"
               value="0"
               step="0.1"
-              class="slider"
+              class="w-3/4 accent-emerald-500"
               hx-post="/update-eq"
               hx-trigger="input"
               hx-vals='{"band":"high"}'
               hx-target="#highValue"
               hx-swap="outerHTML"
+              oninput="updateEQFromSlider('high', this.value)"
             />
           </div>
         </div>
       </div>
-      <div class="led">
-        <h2>Audio Features</h2>
-        <div class="voice-mode-section">
+
+      <!-- Audio Feature Section -->
+      <div class="bg-gray-800 rounded-xl shadow-md p-6 w-full max-w-md">
+        <h2 class="text-xl font-semibold text-emerald-400 mb-4">
+          Audio Features
+        </h2>
+
+        <!-- Voice Mode Toggle -->
+        <div class="mb-6">
           <button
-            class="button"
+            class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-md transition"
             hx-post="/toggle-voice-mode"
             hx-target="#currentMode"
             hx-swap="innerHTML"
           >
             Toggle Voice Mode
           </button>
-          <p>Current Mode: <span id="currentMode">off</span></p>
+          <div id="currentMode" class="mt-2 capitalize">Current Mode: off</div>
         </div>
-        <div class="audio-buttons">
-          <button class="button" hx-post="/trigger-ducking" hx-swap="none">
-            Toggle Music Ducking
-          </button>
-          <button class="button" hx-post="/trigger-feedback" hx-swap="none">
-            Toggle Feedback Elim
-          </button>
+
+        <!-- Ducking & Feedback -->
+        <div class="flex flex-col gap-4">
+          <div>
+            <button
+              class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-md transition"
+              hx-post="/trigger-ducking"
+              hx-target="#musicDucking"
+              hx-swap="innerHTML"
+            >
+              Toggle Ducking
+            </button>
+            <div id="musicDucking" class="mt-2 capitalize">Ducking: off</div>
+          </div>
+
+          <div>
+            <button
+              class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-md transition"
+              hx-post="/trigger-feedback"
+              hx-target="#feedback"
+              hx-swap="innerHTML"
+            >
+              Toggle Feedback
+            </button>
+            <div id="feedback" class="mt-2 capitalize">Feedback: off</div>
+          </div>
         </div>
       </div>
     </div>

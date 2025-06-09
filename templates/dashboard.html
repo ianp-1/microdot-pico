@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="/static/script.js" defer></script>
+    <script src="/static/htmx.min.js" defer></script>
+  </head>
+  <body>
+    <ul>
+      <li><a href="/" class="active">Dashboard</a></li>
+    </ul>
+    <div class="container">
+      <div class="led eq-section">
+        <h2>EQ Settings</h2>
+        <div class="eq-visualization">
+          <canvas id="eqCanvas" width="300" height="200"></canvas>
+          <div class="eq-values">
+            <div class="eq-value">
+              <span class="eq-label">Low (80Hz)</span>
+              <span id="lowValue">0.0dB</span>
+            </div>
+            <div class="eq-value">
+              <span class="eq-label">Mid (1kHz)</span>
+              <span id="midValue">0.0dB</span>
+            </div>
+            <div class="eq-value">
+              <span class="eq-label">High (8kHz)</span>
+              <span id="highValue">0.0dB</span>
+            </div>
+          </div>
+        </div>
+        <div class="eq-controls-traditional">
+          <div class="eq-band">
+            <label for="lowSlider">Low</label>
+            <input
+              type="range"
+              id="lowSlider"
+              name="low"
+              min="-12"
+              max="12"
+              value="0"
+              step="0.1"
+              class="slider"
+              hx-post="/update-eq"
+              hx-trigger="input"
+              hx-vals='{"band":"low"}'
+              hx-target="#lowValue"
+              hx-swap="outerHTML"
+            />
+          </div>
+          <div class="eq-band">
+            <label for="midSlider">Mid</label>
+            <input
+              type="range"
+              id="midSlider"
+              name="mid"
+              min="-12"
+              max="12"
+              value="0"
+              step="0.1"
+              class="slider"
+              hx-post="/update-eq"
+              hx-trigger="input"
+              hx-vals='{"band":"mid"}'
+              hx-target="#midValue"
+              hx-swap="outerHTML"
+            />
+          </div>
+          <div class="eq-band">
+            <label for="highSlider">High</label>
+            <input
+              type="range"
+              id="highSlider"
+              name="high"
+              min="-12"
+              max="12"
+              value="0"
+              step="0.1"
+              class="slider"
+              hx-post="/update-eq"
+              hx-trigger="input"
+              hx-vals='{"band":"high"}'
+              hx-target="#highValue"
+              hx-swap="outerHTML"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="led">
+        <h2>Audio Features</h2>
+        <div class="voice-mode-section">
+          <button
+            class="button"
+            hx-post="/toggle-voice-mode"
+            hx-target="#currentMode"
+            hx-swap="innerHTML"
+          >
+            Toggle Voice Mode
+          </button>
+          <p>Current Mode: <span id="currentMode">off</span></p>
+        </div>
+        <div class="audio-buttons">
+          <button class="button" hx-post="/trigger-ducking" hx-swap="none">
+            Toggle Music Ducking
+          </button>
+          <button class="button" hx-post="/trigger-feedback" hx-swap="none">
+            Toggle Feedback Elim
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

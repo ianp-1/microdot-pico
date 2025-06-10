@@ -6,17 +6,8 @@ export default class ModeManager {
   }
 
   setupEventListeners() {
-    // Handle mode updates from WebSocket
-    this.wsManager.callbacks.mode = (message) => {
-      this.updateMode(message.mode);
-    };
-
-    // Handle initial state updates
-    this.wsManager.callbacks.initial_state = (message) => {
-      if (message.mode) {
-        this.updateMode(message.mode);
-      }
-    };
+    // Note: callbacks are set up in audio-dashboard.js during wsManager initialization
+    // This method is kept for potential future direct event handling
   }
 
   updateMode(mode) {

@@ -7,8 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@0.1.0/dist/chartjs-plugin-dragData.min.js"></script>
-    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-    <script src="https://unpkg.com/htmx-ext-ws@2.0.2"></script>
+
     <script type="module" src="/static/scripts/script.js"></script>
     <style type="text/tailwindcss">
       @theme {
@@ -16,7 +15,7 @@
       }
     </style>
   </head>
-  <body hx-ext="ws" ws-connect="/ws" class="bg-gray-900 text-white font-sans">
+  <body class="bg-gray-900 text-white font-sans">
     <!-- Main Container -->
     <div class="max-w-7xl mx-auto p-8 flex flex-wrap gap-8 justify-center">
       <!-- EQ Section -->
@@ -106,15 +105,13 @@
 
         <!-- Voice Mode Toggle -->
         <div class="mb-6">
-          <form ws-send class="inline">
-            <input type="hidden" name="action" value="toggle_voice_mode" />
-            <button
-              type="submit"
-              class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-md transition"
-            >
-              Toggle Voice Mode
-            </button>
-          </form>
+          <button
+            id="toggleVoiceModeBtn"
+            type="button"
+            class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-md transition"
+          >
+            Toggle Voice Mode
+          </button>
           <div id="currentMode" class="mt-2 capitalize">Current Mode: off</div>
         </div>
 

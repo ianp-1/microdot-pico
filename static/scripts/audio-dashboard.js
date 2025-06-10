@@ -38,6 +38,9 @@ export default class AudioDashboardApp {
     // Initialize Mode Manager
     this.modeManager = new ModeManager(this.wsManager);
 
+    // Connect toggle button to mode manager
+    this.setupModeToggleButton();
+
     // Make global functions available for HTML onclick handlers
     this.exposeGlobalFunctions();
 
@@ -76,6 +79,18 @@ export default class AudioDashboardApp {
     console.log("Handling mode update:", message);
     if (this.modeManager) {
       this.modeManager.updateMode(message.mode);
+    }
+  }
+
+  setupModeToggleButton() {
+    const toggleButton = document.getElementById("toggleVoiceModeBtn");
+    if (toggleButton) {
+      toggleButton.addEventListener("click", () => {
+        console.log("Toggle voice mode button clicked");
+        this.modeManager.toggleMode();
+      });
+    } else {
+      console.error("Toggle voice mode button not found!");
     }
   }
 

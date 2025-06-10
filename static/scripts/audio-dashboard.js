@@ -20,7 +20,7 @@ export default class AudioDashboardApp {
     this.wsManager = new WebSocketManager(`ws://${location.host}/ws`, {
       dial: (message) => this.handleDialUpdate(message),
       mode: (message) => this.handleModeUpdate(message),
-      initial_state: (message) => this.handleInitialState(message), // Add this handler
+      initial_state: (message) => this.handleInitialState(message),
       onOpen: () => {
         console.log("Dashboard WebSocket connected");
         // Don't request initial data - server sends it automatically
@@ -72,6 +72,16 @@ export default class AudioDashboardApp {
         mid: message.mid,
         high: message.high,
       });
+
+      // Update control sources if provided
+      if (message.control_sources) {
+        console.log("Updating control sources:", message.control_sources);
+        Object.keys(message.control_sources).forEach((band) => {
+          const source = message.control_sources[band];
+          console.log(`Setting ${band} control to: ${source}`);
+          this.eqController.updateControlStatus(band, source);
+        });
+      }
     }
   }
 

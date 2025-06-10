@@ -49,6 +49,7 @@ export default class WebSocketManager {
   }
 
   handleMessage(message) {
+    console.log("WebSocket message received:", message);
     const handler = this.callbacks[message.type];
     if (handler) {
       handler(message);

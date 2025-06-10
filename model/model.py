@@ -40,8 +40,9 @@ class AudioModel:
     def ws_clients(self):
         return self.ws_manager.clients
     
-    def set_target_eq(self, band, value):
-        self.eq_processor.set_target_eq(band, value)
+    def set_target_eq(self, band, value, source='digital'):
+        """Set target EQ value with source tracking"""
+        self.eq_processor.set_target_eq(band, value, source)
     
     async def monitor_dials_loop(self, interval_ms=100):
         await self.eq_processor.monitor_loop(interval_ms)

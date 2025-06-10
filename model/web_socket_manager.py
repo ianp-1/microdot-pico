@@ -15,12 +15,22 @@ class WebSocketManager:
         msg = json.dumps({"type": "mode", "mode": mode})
         self._broadcast(msg)
     
-    def broadcast_eq_update(self, eq_data):
+    def broadcast_eq_update(self, callback_data):
+        # Handle both old format (just eq data) and new format (eq + control sources)
+        if isinstance(callback_data, dict) and 'eq' in callback_data:
+            eq_data = callback_data['eq']
+            control_sources = callback_data.get('control_sources', {})
+        else:
+            # Backward compatibility - callback_data is just the eq values
+            eq_data = callback_data
+            control_sources = {}
+        
         msg = json.dumps({
             "type": "dial",
             "low": eq_data["low"],
             "mid": eq_data["mid"],
-            "high": eq_data["high"]
+            "high": eq_data["high"],
+            "control_sources": control_sources
         })
         self._broadcast(msg)
     

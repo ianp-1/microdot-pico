@@ -68,16 +68,11 @@ async def websocket_handler(request, ws):
             
             if message:
                 try:
-                    # Handle URL-encoded form data from HTMX
-                    if isinstance(message, str) and '=' in message and not message.startswith('{'):
-                        data = dict(item.split('=') for item in message.split('&'))
-                    else:
-                        # Handle JSON data
-                        data = json.loads(message)
-                    
+                    # Handle JSON data only
+                    data = json.loads(message)
                     action = data.get('action')
                     
-                    # Add this simple ping test
+                    # Ping test
                     if action == 'ping':
                         await ws.send(json.dumps({
                             'type': 'pong', 
@@ -130,20 +125,55 @@ def current_eq_json(request):
 
 async def setup_network():
     if USE_AP_MODE:
+        print("Setting up Access Point...")
         ap = network.WLAN(network.AP_IF)
-        ap.config(essid='PicoW', password='12345678')
         ap.active(True)
-        while not ap.active():
+        
+        # Give it a moment to activate
+        await asyncio.sleep(1)
+        
+        ap.config(
+            essid='PicoW-Audio',
+            password='picowifi'
+        )
+        
+        # Wait for AP to become active and configured
+        max_wait = 15
+        while max_wait > 0:
+            if ap.active() and ap.ifconfig()[0] != '0.0.0.0':
+                break
+            print(f"Waiting for AP... {max_wait}")
             await asyncio.sleep(1)
-        print("Access Point active:", ap.ifconfig())
+            max_wait -= 1
+        
+        if ap.active() and ap.ifconfig()[0] != '0.0.0.0':
+            print("✓ Access Point active and ready")
+            print("Network config:", ap.ifconfig())
+            print("Connect to network: PicoW-Audio")
+            print("Password: picowifi")
+            print("Then visit: http://192.168.4.1")
+            return True
+        else:
+            print("✗ Failed to activate Access Point")
+            return False
     else:
         mm_wlan.connect_to_network(ssid, password)
         print("Connected to WLAN")
-
+        return True
 
 # server start
 async def main():
+    # Ensure network is ready before starting server
+    network_ready = await setup_network()
+    
+    if not network_ready:
+        print("Network setup failed, exiting...")
+        return
+    
+    print("Starting background tasks...")
     asyncio.create_task(model.monitor_dials_loop())
+    
+    print("Starting Microdot server on port 80...")
     await app.start_server(port=80)
 
 # run everything

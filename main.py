@@ -6,7 +6,7 @@ from model.model import AudioModel
 import network
 import json
 
-USE_AP_MODE = True
+USE_AP_MODE = False
 
 ssid = 'SUGA Guest 5G'
 password = 'suga22wifi'
@@ -22,6 +22,8 @@ def index(request):
 def static_files(request, path):
     if path.endswith('.js'):
         return send_file(f'static/{path}', content_type='application/javascript')
+    elif path.endswith('.css'):
+        return send_file(f'static/{path}', content_type='text/css')
     return send_file(f'static/{path}')
 
 @app.post('/toggle-voice-mode')

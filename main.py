@@ -20,22 +20,38 @@ def index(request):
 
 @app.route('/static/<path:path>')
 def static_files(request, path):
-    if path.endswith('.js'):
-        return send_file(f'static/{path}', content_type='application/javascript')
-    elif path.endswith('.css'):
-        return send_file(f'static/{path}', content_type='text/css')
-    return send_file(f'static/{path}')
+    try:
+        if path.endswith('.js'):
+            return send_file(f'static/{path}', content_type='application/javascript')
+        elif path.endswith('.css'):
+            return send_file(f'static/{path}', content_type='text/css')
+        return send_file(f'static/{path}')
+    except OSError as e:
+        print(f"[STATIC] File not found: static/{path} - {e}")
+        return Response("File not found", status_code=404)
 
 @app.post('/toggle-voice-mode')
 def toggle_mode(request):
     mode = model.voice_mode_manager.toggle_mode()
     return f'<span id="currentMode">Current Mode: {mode}</span>'
 
+@app.post('/trigger-ducking')
+def toggle_ducking(request):
+    enabled = model.voice_mode_manager.toggle_ducking()
+    return f'<span id="musicDucking">Ducking: {"on" if enabled else "off"}</span>'
+
+@app.post('/trigger-feedback')
+def toggle_feedback(request):
+    enabled = model.voice_mode_manager.toggle_feedback()
+    return f'<span id="feedback">Feedback: {"on" if enabled else "off"}</span>'
+
 @app.route('/current-state-json')
 def current_state_json(request):
     """Return current system state as JSON"""
     return {
         'mode': model.voice_mode_manager.current_mode,
+        'ducking': model.voice_mode_manager.ducking_enabled,
+        'feedback': model.voice_mode_manager.feedback_enabled,
         'eq': {
             'low': model.eq_processor.live_db['low'],
             'mid': model.eq_processor.live_db['mid'], 
@@ -53,6 +69,8 @@ async def websocket_handler(request, ws):
         initial_state = {
             'type': 'initial_state',
             'mode': model.voice_mode_manager.current_mode,
+            'feedback': model.voice_mode_manager.feedback_enabled,
+            'ducking': model.voice_mode_manager.ducking_enabled,
             'eq': {
                 'low': model.eq_processor.live_db['low'],
                 'mid': model.eq_processor.live_db['mid'], 
@@ -93,6 +111,14 @@ async def websocket_handler(request, ws):
                             # Set digital control priority for this band
                             model.set_target_eq(band, value, source='digital')
                             print(f"[WS] EQ update: {band} = {value}dB (digital)")
+                    
+                    elif action == 'toggle_ducking':
+                        new_state = model.voice_mode_manager.toggle_ducking()
+                        print(f"[WS] Ducking toggled to: {new_state}")
+                        
+                    elif action == 'toggle_feedback':
+                        new_state = model.voice_mode_manager.toggle_feedback()
+                        print(f"[WS] Feedback toggled to: {new_state}")
                             
                     elif action == 'get_current_state':
                         # Send current state back to client

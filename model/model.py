@@ -18,8 +18,8 @@ class AudioModel:
         
         # Initialize button manager with actions
         button_config = {
-            6: None,  # Reserved
-            7: None,  # Reserved  
+            6: self.voice_mode_manager.toggle_feedback,  
+            7: self.voice_mode_manager.toggle_ducking,  
             8: None,  # Reserved
             9: self.voice_mode_manager.toggle_mode
         }
@@ -32,6 +32,10 @@ class AudioModel:
         # Voice mode changes update LEDs and notify WebSocket clients
         self.voice_mode_manager.add_change_callback(self.led_manager.set_mode)
         self.voice_mode_manager.add_change_callback(self.ws_manager.broadcast_mode_change)
+        
+        # Ducking and feedback changes notify WebSocket clients
+        self.voice_mode_manager.add_ducking_callback(self.ws_manager.broadcast_ducking_change)
+        self.voice_mode_manager.add_feedback_callback(self.ws_manager.broadcast_feedback_change)
         
         # EQ changes notify WebSocket clients
         self.eq_processor.add_update_callback(self.ws_manager.broadcast_eq_update)

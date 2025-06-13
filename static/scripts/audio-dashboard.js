@@ -20,6 +20,8 @@ export default class AudioDashboardApp {
     this.wsManager = new WebSocketManager(`ws://${location.host}/ws`, {
       dial: (message) => this.handleDialUpdate(message),
       mode: (message) => this.handleModeUpdate(message),
+      ducking: (message) => this.handleDuckingUpdate(message),
+      feedback: (message) => this.handleFeedbackUpdate(message),
       initial_state: (message) => this.handleInitialState(message),
       onOpen: () => {
         console.log("Dashboard WebSocket connected");
@@ -40,9 +42,7 @@ export default class AudioDashboardApp {
 
     // Connect toggle button to mode manager
     this.setupModeToggleButton();
-
-    // Make global functions available for HTML onclick handlers
-    this.exposeGlobalFunctions();
+    this.setupDuckingFeedbackButtons();
 
     console.log("Audio Dashboard initialized");
   }
@@ -61,6 +61,18 @@ export default class AudioDashboardApp {
     if (this.eqController && message.eq) {
       console.log("Setting EQ to:", message.eq);
       this.eqController.updateFromServer(message.eq);
+    }
+
+    // Update ducking state
+    if (message.ducking !== undefined) {
+      console.log("Setting ducking to:", message.ducking);
+      this.updateDuckingDisplay(message.ducking);
+    }
+
+    // Update feedback state
+    if (message.feedback !== undefined) {
+      console.log("Setting feedback to:", message.feedback);
+      this.updateFeedbackDisplay(message.feedback);
     }
   }
 
@@ -92,6 +104,36 @@ export default class AudioDashboardApp {
     }
   }
 
+  handleDuckingUpdate(message) {
+    console.log("Handling ducking update:", message);
+    this.updateDuckingDisplay(message.enabled);
+  }
+
+  handleFeedbackUpdate(message) {
+    console.log("Handling feedback update:", message);
+    this.updateFeedbackDisplay(message.enabled);
+  }
+
+  updateDuckingDisplay(enabled) {
+    const duckingDisplay = document.getElementById("musicDucking");
+    if (duckingDisplay) {
+      duckingDisplay.textContent = `Ducking: ${enabled ? "on" : "off"}`;
+      duckingDisplay.className = `mt-2 capitalize ${
+        enabled ? "text-emerald-400" : "text-gray-400"
+      }`;
+    }
+  }
+
+  updateFeedbackDisplay(enabled) {
+    const feedbackDisplay = document.getElementById("feedback");
+    if (feedbackDisplay) {
+      feedbackDisplay.textContent = `Feedback: ${enabled ? "on" : "off"}`;
+      feedbackDisplay.className = `mt-2 capitalize ${
+        enabled ? "text-emerald-400" : "text-gray-400"
+      }`;
+    }
+  }
+
   setupModeToggleButton() {
     const toggleButton = document.getElementById("toggleVoiceModeBtn");
     if (toggleButton) {
@@ -104,19 +146,38 @@ export default class AudioDashboardApp {
     }
   }
 
-  exposeGlobalFunctions() {
-    // For backward compatibility with HTML onclick handlers
-    window.updateEQFromSlider = (band, value) => {
-      if (this.eqController) {
-        this.eqController.handleSliderChange(band, parseFloat(value));
-      }
-    };
+  setupDuckingFeedbackButtons() {
+    // Setup ducking button
+    const duckingButtons = document.querySelectorAll(
+      'button[hx-post="/trigger-ducking"]'
+    );
+    duckingButtons.forEach((button) => {
+      // Remove HTMX attributes and add WebSocket click handler
+      button.removeAttribute("hx-post");
+      button.removeAttribute("hx-target");
+      button.removeAttribute("hx-swap");
 
-    window.updateEQChart = (values) => {
-      if (this.eqChart) {
-        this.eqChart.updateValues(values);
-      }
-    };
+      button.addEventListener("click", () => {
+        console.log("Toggle ducking button clicked");
+        this.modeManager.toggleDucking();
+      });
+    });
+
+    // Setup feedback button
+    const feedbackButtons = document.querySelectorAll(
+      'button[hx-post="/trigger-feedback"]'
+    );
+    feedbackButtons.forEach((button) => {
+      // Remove HTMX attributes and add WebSocket click handler
+      button.removeAttribute("hx-post");
+      button.removeAttribute("hx-target");
+      button.removeAttribute("hx-swap");
+
+      button.addEventListener("click", () => {
+        console.log("Toggle feedback button clicked");
+        this.modeManager.toggleFeedback();
+      });
+    });
   }
 
   destroy() {

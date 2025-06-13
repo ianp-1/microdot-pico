@@ -15,6 +15,14 @@ class WebSocketManager:
         msg = json.dumps({"type": "mode", "mode": mode})
         self._broadcast(msg)
     
+    def broadcast_ducking_change(self, enabled):
+        msg = json.dumps({"type": "ducking", "enabled": enabled})
+        self._broadcast(msg)
+    
+    def broadcast_feedback_change(self, enabled):
+        msg = json.dumps({"type": "feedback", "enabled": enabled})
+        self._broadcast(msg)
+    
     def broadcast_eq_update(self, callback_data):
         # Handle both old format (just eq data) and new format (eq + control sources)
         if isinstance(callback_data, dict) and 'eq' in callback_data:

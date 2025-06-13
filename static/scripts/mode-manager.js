@@ -21,7 +21,7 @@ export default class ModeManager {
       console.error("currentMode element not found!");
     }
 
-    this.onModeChange?.(mode);
+    this.onModeChangeCallback?.(mode);
   }
 
   toggleMode() {
@@ -30,7 +30,19 @@ export default class ModeManager {
     });
   }
 
-  onModeChange(callback) {
-    this.onModeChange = callback;
+  toggleDucking() {
+    this.wsManager.send({
+      action: "toggle_ducking",
+    });
+  }
+
+  toggleFeedback() {
+    this.wsManager.send({
+      action: "toggle_feedback",
+    });
+  }
+
+  setOnModeChangeCallback(callback) {
+    this.onModeChangeCallback = callback;
   }
 }

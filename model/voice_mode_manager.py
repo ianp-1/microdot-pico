@@ -4,9 +4,21 @@ class VoiceModeManager:
         self.current_mode_index = initial_index
         self.current_mode = self.voice_modes[self.current_mode_index]
         self.change_callbacks = []
+        
+        # Add ducking and feedback state
+        self.ducking_enabled = False
+        self.feedback_enabled = False
+        self.ducking_callbacks = []
+        self.feedback_callbacks = []
     
     def add_change_callback(self, callback):
         self.change_callbacks.append(callback)
+    
+    def add_ducking_callback(self, callback):
+        self.ducking_callbacks.append(callback)
+    
+    def add_feedback_callback(self, callback):
+        self.feedback_callbacks.append(callback)
     
     def toggle_mode(self):
         self.current_mode_index = (self.current_mode_index + 1) % len(self.voice_modes)
@@ -18,3 +30,23 @@ class VoiceModeManager:
             callback(self.current_mode)
         
         return self.current_mode
+    
+    def toggle_ducking(self):
+        self.ducking_enabled = not self.ducking_enabled
+        print(f"[DUCKING] Ducking toggled to: {self.ducking_enabled}")
+        
+        # Notify all callbacks
+        for callback in self.ducking_callbacks:
+            callback(self.ducking_enabled)
+        
+        return self.ducking_enabled
+    
+    def toggle_feedback(self):
+        self.feedback_enabled = not self.feedback_enabled
+        print(f"[FEEDBACK] Feedback toggled to: {self.feedback_enabled}")
+        
+        # Notify all callbacks
+        for callback in self.feedback_callbacks:
+            callback(self.feedback_enabled)
+        
+        return self.feedback_enabled

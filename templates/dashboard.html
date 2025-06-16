@@ -1,155 +1,430 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      // set theme on load
+      (function () {
+        const theme = localStorage.getItem("theme") || "dark"; // default theme
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard</title>
-    <script src="/static/twind-cdn.min.js"></script>
+    <title>Audio Dashboard</title>
     <script src="/static/chart.js"></script>
+    <link href="/static/output.css" rel="stylesheet" />
+    <script src="/static/theme-change.js"></script>
     <script type="module" src="/static/scripts/script.js"></script>
   </head>
-  <body class="bg-gray-900 text-white font-sans">
-    <!-- Main Container -->
-    <div class="max-w-7xl mx-auto p-8 flex flex-wrap gap-8 justify-center">
-      <!-- EQ Section -->
-      <div class="bg-gray-800 rounded-xl shadow-md p-6 w-full max-w-md">
-        <h2 class="text-xl font-semibold text-emerald-400 mb-4">EQ Settings</h2>
-        <div class="mb-4">
-          <canvas id="eqChart" width="400" height="200"></canvas>
-          <div class="grid grid-cols-3 gap-2 text-center mb-4">
-            <div
-              class="bg-emerald-900 bg-opacity-10 border border-emerald-400 p-1 rounded"
-            >
-              <span class="text-xs text-emerald-400 block">Low (80Hz)</span>
-              <span id="lowValue" class="text-sm">0.0dB</span>
-            </div>
-            <div
-              class="bg-emerald-900 bg-opacity-10 border border-emerald-400 p-1 rounded"
-            >
-              <span class="text-xs text-emerald-400 block">Mid (1kHz)</span>
-              <span id="midValue" class="text-sm">0.0dB</span>
-            </div>
-            <div
-              class="bg-emerald-900 bg-opacity-10 border border-emerald-400 p-1 rounded"
-            >
-              <span class="text-xs text-emerald-400 block">High (8kHz)</span>
-              <span id="highValue" class="text-sm">0.0dB</span>
-            </div>
-          </div>
+  <body class="bg-gradient-to-br from-base-100 to-base-200 min-h-screen p-6">
+    <!-- Theme Selector -->
+    <div class="fixed top-4 right-4 z-50">
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12,18.17L8.83,15L7.42,16.41L12,21L16.58,16.41L15.17,15M12,5.83L15.17,9L16.58,7.59L12,3L7.42,7.59L8.83,9L12,5.83Z"
+            />
+          </svg>
         </div>
+        <ul
+          tabindex="0"
+          class="dropdown-content bg-base-200 rounded-box z-[1] w-48 p-2 shadow-xl border border-base-300"
+        >
+          <li>
+            <button
+              class="theme-controller btn btn-sm btn-block btn-ghost justify-start"
+              data-set-theme="light"
+              data-act-class="ACTIVECLASS"
+            >
+              🌞 Light
+            </button>
+          </li>
+          <li>
+            <button
+              class="theme-controller btn btn-sm btn-block btn-ghost justify-start"
+              data-set-theme="dark"
+              data-act-class="ACTIVECLASS"
+            >
+              🌙 Dark
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
 
-        <!-- Sliders -->
-        <div class="space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="flex flex-col">
-              <label for="lowSlider" class="text-emerald-400 font-semibold"
-                >Low</label
-              >
-              <span id="lowControlStatus" class="text-xs text-gray-400"
-                >Physical</span
-              >
-            </div>
-            <input
-              type="range"
-              id="lowSlider"
-              name="low"
-              min="-12"
-              max="12"
-              value="0"
-              step="0.1"
-              class="w-3/4 accent-emerald-500"
-            />
-          </div>
-
-          <div class="flex items-center justify-between">
-            <div class="flex flex-col">
-              <label for="midSlider" class="text-emerald-400 font-semibold"
-                >Mid</label
-              >
-              <span id="midControlStatus" class="text-xs text-gray-400"
-                >Physical</span
-              >
-            </div>
-            <input
-              type="range"
-              id="midSlider"
-              name="mid"
-              min="-12"
-              max="12"
-              value="0"
-              step="0.1"
-              class="w-3/4 accent-emerald-500"
-            />
-          </div>
-
-          <div class="flex items-center justify-between">
-            <div class="flex flex-col">
-              <label for="highSlider" class="text-emerald-400 font-semibold"
-                >High</label
-              >
-              <span id="highControlStatus" class="text-xs text-gray-400"
-                >Physical</span
-              >
-            </div>
-            <input
-              type="range"
-              id="highSlider"
-              name="high"
-              min="-12"
-              max="12"
-              value="0"
-              step="0.1"
-              class="w-3/4 accent-emerald-500"
-            />
-          </div>
-        </div>
+    <!-- Main Dashboard Content -->
+    <div class="container mx-auto max-w-6xl">
+      <!-- Dashboard Header -->
+      <div class="text-center mb-8">
+        <h1
+          class="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-2"
+        >
+          Dashboard
+        </h1>
       </div>
 
-      <!-- Audio Feature Section -->
-      <div class="bg-gray-800 rounded-xl shadow-md p-6 w-full max-w-md">
-        <h2 class="text-xl font-semibold text-emerald-400 mb-4">
-          Audio Features
-        </h2>
+      <!-- Main Control Grid -->
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <!-- EQ Control Panel -->
+        <div
+          class="card bg-base-100/80 backdrop-blur-sm shadow-2xl border border-base-300/50"
+        >
+          <div class="card-body">
+            <h2 class="card-title text-2xl mb-6">
+              <div
+                class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6 13.5V3.75m0 9.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 3.75V16.5m12-3V3.75m0 9.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 3.75V16.5m-6-9V3.75m0 3.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 9.75V10.5"
+                  />
+                </svg>
+              </div>
+              <span
+                class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+              >
+                Equalizer
+              </span>
+            </h2>
 
-        <!-- Voice Mode Toggle -->
-        <div class="mb-6">
-          <button
-            id="toggleVoiceModeBtn"
-            type="button"
-            class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-md transition"
-          >
-            Toggle Voice Mode
-          </button>
-          <div id="currentMode" class="mt-2 capitalize">Current Mode: off</div>
+            <!-- EQ Chart -->
+            <div
+              class="mb-6 p-4 bg-base-200/50 rounded-xl border border-base-300/30"
+            >
+              <canvas
+                id="eqChart"
+                width="400"
+                height="200"
+                class="w-full"
+              ></canvas>
+            </div>
+
+            <!-- EQ Values Display -->
+            <div class="grid grid-cols-3 gap-4 mb-6">
+              <div
+                class="text-center p-3 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20"
+              >
+                <div class="text-xs text-primary font-semibold">LOW (80Hz)</div>
+                <div class="text-lg font-mono" id="lowValue">0.0dB</div>
+              </div>
+              <div
+                class="text-center p-3 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-lg border border-secondary/20"
+              >
+                <div class="text-xs text-secondary font-semibold">
+                  MID (1kHz)
+                </div>
+                <div class="text-lg font-mono" id="midValue">0.0dB</div>
+              </div>
+              <div
+                class="text-center p-3 bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg border border-accent/20"
+              >
+                <div class="text-xs text-accent font-semibold">HIGH (8kHz)</div>
+                <div class="text-lg font-mono" id="highValue">0.0dB</div>
+              </div>
+            </div>
+
+            <!-- EQ Controls -->
+            <div class="space-y-6">
+              <div class="form-control">
+                <div class="flex items-center justify-between mb-2">
+                  <label
+                    class="label-text font-semibold flex items-center gap-2"
+                  >
+                    <div class="w-3 h-3 rounded-full bg-primary"></div>
+                    Low Frequency
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <span class="badge badge-sm" id="lowControlStatus"
+                      >Physical</span
+                    >
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  id="lowSlider"
+                  name="low"
+                  min="-12"
+                  max="12"
+                  value="0"
+                  step="0.1"
+                  class="range range-primary w-full"
+                />
+                <div
+                  class="w-full flex justify-between text-xs px-2 mt-1 text-base-content/60"
+                >
+                  <span>-12dB</span>
+                  <span>-6dB</span>
+                  <span>0dB</span>
+                  <span>+6dB</span>
+                  <span>+12dB</span>
+                </div>
+              </div>
+
+              <div class="form-control">
+                <div class="flex items-center justify-between mb-2">
+                  <label
+                    class="label-text font-semibold flex items-center gap-2"
+                  >
+                    <div class="w-3 h-3 rounded-full bg-secondary"></div>
+                    Mid Frequency
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <span class="badge badge-sm" id="midControlStatus"
+                      >Physical</span
+                    >
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  id="midSlider"
+                  name="mid"
+                  min="-12"
+                  max="12"
+                  value="0"
+                  step="0.1"
+                  class="range range-secondary w-full"
+                />
+                <div
+                  class="w-full flex justify-between text-xs px-2 mt-1 text-base-content/60"
+                >
+                  <span>-12dB</span>
+                  <span>-6dB</span>
+                  <span>0dB</span>
+                  <span>+6dB</span>
+                  <span>+12dB</span>
+                </div>
+              </div>
+
+              <div class="form-control">
+                <div class="flex items-center justify-between mb-2">
+                  <label
+                    class="label-text font-semibold flex items-center gap-2"
+                  >
+                    <div class="w-3 h-3 rounded-full bg-accent"></div>
+                    High Frequency
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <span class="badge badge-sm" id="highControlStatus"
+                      >Physical</span
+                    >
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  id="highSlider"
+                  name="high"
+                  min="-12"
+                  max="12"
+                  value="0"
+                  step="0.1"
+                  class="range range-accent w-full"
+                />
+                <div
+                  class="w-full flex justify-between text-xs px-2 mt-1 text-base-content/60"
+                >
+                  <span>-12dB</span>
+                  <span>-6dB</span>
+                  <span>0dB</span>
+                  <span>+6dB</span>
+                  <span>+12dB</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Ducking & Feedback -->
-        <div class="flex flex-col gap-4">
-          <div>
-            <button
-              class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-md transition"
-              hx-post="/trigger-ducking"
-              hx-target="#musicDucking"
-              hx-swap="innerHTML"
-            >
-              Toggle Ducking
-            </button>
-            <div id="musicDucking" class="mt-2 capitalize">Ducking: off</div>
-          </div>
+        <!-- Audio Features Panel -->
+        <div
+          class="card bg-base-100/80 backdrop-blur-sm shadow-2xl border border-base-300/50"
+        >
+          <div class="card-body">
+            <h2 class="card-title text-2xl mb-6">
+              <div
+                class="w-10 h-10 rounded-lg bg-gradient-to-br from-secondary to-accent flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m9 9 10.5-3m0 6.553v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 1 1-.99-3.467l2.31-.66a2.25 2.25 0 0 0 1.632-2.163Zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 0 1-.99-3.467l2.31-.66A2.25 2.25 0 0 0 9 15.553Z"
+                  />
+                </svg>
+              </div>
+              <span
+                class="bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent"
+              >
+                Audio Features
+              </span>
+            </h2>
 
-          <div>
-            <button
-              class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-md transition"
-              hx-post="/trigger-feedback"
-              hx-target="#feedback"
-              hx-swap="innerHTML"
-            >
-              Toggle Feedback
-            </button>
-            <div id="feedback" class="mt-2 capitalize">Feedback: off</div>
+            <!-- Voice Mode Control -->
+            <div class="form-control mb-6">
+              <div
+                class="card bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20"
+              >
+                <div class="card-body p-4">
+                  <div class="flex items-center gap-3 mb-3">
+                    <svg
+                      class="w-6 h-6 text-primary"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"
+                      />
+                    </svg>
+                    <div>
+                      <h3 class="font-semibold">Voice Mode</h3>
+                      <p class="text-xs text-base-content/70">Audio Presets</p>
+                    </div>
+                  </div>
+                  <button
+                    id="toggleVoiceModeBtn"
+                    type="button"
+                    class="btn btn-primary btn-block btn-outline"
+                  >
+                    Toggle Voice Mode
+                  </button>
+                  <div class="mt-2 text-center">
+                    <div class="badge badge-ghost">
+                      <span id="currentMode" class="text-sm capitalize"
+                        >Current Mode: off</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Audio Processing Controls -->
+            <div class="space-y-4">
+              <div class="form-control">
+                <div
+                  class="card bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20"
+                >
+                  <div class="card-body p-4">
+                    <div class="flex items-center gap-3 mb-3">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="size-6 text-secondary"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
+                        />
+                      </svg>
+
+                      <div>
+                        <h4 class="font-medium">Music Ducking</h4>
+                        <p class="text-xs text-base-content/70">
+                          Auto-adjust music levels
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      class="btn btn-secondary btn-outline btn-block"
+                      hx-post="/trigger-ducking"
+                      hx-target="#musicDucking"
+                      hx-swap="innerHTML"
+                    >
+                      Toggle Ducking
+                    </button>
+                    <div class="mt-2 text-center">
+                      <span class="badge badge-ghost" id="musicDucking"
+                        >Ducking: off</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-control">
+                <div
+                  class="card bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20"
+                >
+                  <div class="card-body p-4">
+                    <div class="flex items-center gap-3 mb-3">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="size-6 text-accent"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"
+                        />
+                      </svg>
+
+                      <div>
+                        <h4 class="font-medium">Audio Feedback</h4>
+                        <p class="text-xs text-base-content/70">
+                          Feedback suppression
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      class="btn btn-accent btn-outline btn-block"
+                      hx-post="/trigger-feedback"
+                      hx-target="#feedback"
+                      hx-swap="innerHTML"
+                    >
+                      Toggle Feedback Control
+                    </button>
+                    <div class="mt-2 text-center">
+                      <span class="badge badge-ghost" id="feedback"
+                        >Feedback: off</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+    <style>
+      .theme-controller.ACTIVECLASS {
+        background-color: hsl(var(--p));
+        color: hsl(var(--pc));
+      }
+    </style>
+    <script>
+      //  theme persistence
+      document.addEventListener("DOMContentLoaded", function () {
+        if (!localStorage.getItem("theme")) {
+          document.documentElement.setAttribute("data-theme", "dark");
+          localStorage.setItem("theme", "dark");
+        }
+      });
+    </script>
   </body>
 </html>

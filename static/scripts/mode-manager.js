@@ -11,12 +11,12 @@ export default class ModeManager {
   }
 
   updateMode(mode) {
-    console.log(`Updating mode from "${this.currentMode}" to "${mode}"`);
+    // console.log(`Updating mode from "${this.currentMode}" to "${mode}"`);
     this.currentMode = mode;
     const display = document.getElementById("currentMode");
     if (display) {
       display.textContent = `Current Mode: ${mode}`;
-      console.log(`Updated display to: Current Mode: ${mode}`);
+      // console.log(`Updated display to: Current Mode: ${mode}`);
     } else {
       console.error("currentMode element not found!");
     }

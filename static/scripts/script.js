@@ -1,9 +1,9 @@
 import AudioDashboardApp from "./audio-dashboard.js";
 
-console.log("Script.js loading...");
+// console.log("Script.js loading...");
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM loaded, initializing app...");
+  // console.log("DOM loaded, initializing app...");
 
   try {
     const app = new AudioDashboardApp();
@@ -11,11 +11,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Store app instance globally for debugging
     window.audioApp = app;
 
-    console.log("App initialized successfully");
+    // console.log("App initialized successfully");
 
     // Cleanup on page unload
     window.addEventListener("beforeunload", () => {
-      console.log("Page unloading, destroying app...");
+      // console.log("Page unloading, destroying app...");
       app.destroy();
     });
   } catch (error) {

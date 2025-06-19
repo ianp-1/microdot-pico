@@ -307,6 +307,70 @@ def wifi_restart(request):
         print(f"[WiFi] Restart error: {e}")
         return {'success': False, 'message': 'Failed to restart device'}
 
+@app.post('/wifi/save-station-config')
+def wifi_save_station_config(request):
+    """Save station configuration to file"""
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        ssid = data.get('ssid', '').strip()
+        password = data.get('password', '')
+        
+        if not ssid:
+            return {'success': False, 'message': 'SSID is required'}
+        
+        if not password:
+            return {'success': False, 'message': 'Password is required'}
+        
+        # Save station configuration
+        success = wifi_manager.config.set_station_config(ssid, password)
+        
+        if success:
+            return {
+                'success': True, 
+                'message': f'WiFi configuration saved for network: {ssid}'
+            }
+        else:
+            return {'success': False, 'message': 'Failed to save configuration'}
+        
+    except (ValueError, KeyError) as e:
+        print(f"[WiFi] JSON parse error: {e}")
+        return {'success': False, 'message': 'Invalid request data'}
+    except Exception as e:
+        print(f"[WiFi] Save station config error: {e}")
+        return {'success': False, 'message': 'Failed to save configuration'}
+
+@app.post('/wifi/save-ap-config')
+def wifi_save_ap_config(request):
+    """Save access point configuration to file"""
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        ssid = data.get('ssid', '').strip()
+        password = data.get('password', '')
+        
+        if not ssid:
+            return {'success': False, 'message': 'SSID is required'}
+        
+        if len(password) < 8:
+            return {'success': False, 'message': 'Password must be at least 8 characters'}
+        
+        # Save AP configuration
+        success = wifi_manager.config.set_ap_config(ssid, password)
+        
+        if success:
+            return {
+                'success': True, 
+                'message': f'Access Point configuration saved: {ssid}'
+            }
+        else:
+            return {'success': False, 'message': 'Failed to save configuration'}
+        
+    except (ValueError, KeyError) as e:
+        print(f"[WiFi] JSON parse error: {e}")
+        return {'success': False, 'message': 'Invalid request data'}
+    except Exception as e:
+        print(f"[WiFi] Save AP config error: {e}")
+        return {'success': False, 'message': 'Failed to save configuration'}
+
 async def setup_network():
     """Setup network using WiFi manager"""
     print("[MAIN] Setting up network...")

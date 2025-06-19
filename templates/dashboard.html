@@ -126,7 +126,7 @@
                 Network Mode
               </div>
               <div class="collapse-content">
-                <div class="space-y-3">
+                <div class="space-y-4">
                   <div class="form-control">
                     <label class="label">
                       <span class="label-text text-xs"
@@ -145,23 +145,27 @@
                     </select>
                   </div>
                   <div
-                    class="text-xs text-base-content/60 p-2 bg-base-100/50 rounded"
+                    class="text-xs text-base-content/60 p-3 bg-base-200/50 rounded-lg border border-base-300/30"
                   >
                     <strong>AP Only:</strong> Creates hotspot only<br />
                     <strong>Station Only:</strong> Connects to existing WiFi<br />
-                    <strong>Dual Mode:</strong> Both hotspot and WiFi connection
+                    <strong>Dual Mode:</strong> Both hotspot and WiFi
+                    connection<br />
+                    <br />
+                    <strong>⚠️ Note:</strong> Changing network mode requires a
+                    device restart to take effect.
                   </div>
                   <button
                     id="apply-network-mode-btn"
-                    class="btn btn-info btn-sm btn-block"
+                    class="btn btn-info btn-sm w-full"
                   >
-                    Apply Network Mode
+                    Apply Network Mode (Requires Restart)
                   </button>
                   <button
                     id="restart-device-btn"
-                    class="btn btn-warning btn-sm btn-block mt-2 hidden"
+                    class="btn btn-warning btn-sm w-full mt-2 hidden"
                   >
-                    Restart Device
+                    Restart Device Now
                   </button>
                 </div>
               </div>
@@ -227,10 +231,29 @@
                     d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9"
                   />
                 </svg>
-                Station Mode
+                WiFi Network Configuration
               </div>
               <div class="collapse-content">
-                <div class="space-y-3">
+                <div class="space-y-4">
+                  <div class="alert alert-info text-xs">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      class="stroke-current shrink-0 w-4 h-4"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    <span
+                      >Configure WiFi credentials for Station or Dual mode. Use
+                      Network Mode section above to switch modes.</span
+                    >
+                  </div>
                   <div class="form-control">
                     <label class="label">
                       <span class="label-text text-xs">WiFi Network SSID</span>
@@ -254,10 +277,10 @@
                     />
                   </div>
                   <button
-                    id="connect-station-btn"
-                    class="btn btn-primary btn-sm btn-block"
+                    id="save-station-config-btn"
+                    class="btn btn-primary btn-sm w-full"
                   >
-                    Save Network
+                    Save WiFi Configuration
                   </button>
                 </div>
               </div>
@@ -283,10 +306,29 @@
                     d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
                   />
                 </svg>
-                Access Point Mode
+                Access Point Configuration
               </div>
               <div class="collapse-content">
-                <div class="space-y-3">
+                <div class="space-y-4">
+                  <div class="alert alert-info text-xs">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      class="stroke-current shrink-0 w-4 h-4"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    <span
+                      >Configure Access Point settings for AP or Dual mode. Use
+                      Network Mode section above to switch modes.</span
+                    >
+                  </div>
                   <div class="form-control">
                     <label class="label">
                       <span class="label-text text-xs">AP Name (SSID)</span>
@@ -317,10 +359,10 @@
                   </div>
                   <div class="validator-hint">Enter a password</div>
                   <button
-                    id="start-ap-btn"
-                    class="btn btn-secondary btn-sm btn-block"
+                    id="save-ap-config-btn"
+                    class="btn btn-secondary btn-sm w-full"
                   >
-                    Start Access Point
+                    Save Access Point Configuration
                   </button>
                 </div>
               </div>

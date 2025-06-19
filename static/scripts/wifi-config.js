@@ -24,11 +24,18 @@ class WiFiConfigManager {
         }
       });
 
-    // Station mode connection
+    // Station config save
     document
-      .getElementById("connect-station-btn")
+      .getElementById("save-station-config-btn")
       .addEventListener("click", () => {
-        this.connectToStation();
+        this.saveStationConfig();
+      });
+
+    // AP config save
+    document
+      .getElementById("save-ap-config-btn")
+      .addEventListener("click", () => {
+        this.saveAccessPointConfig();
       });
 
     // Device restart
@@ -37,11 +44,6 @@ class WiFiConfigManager {
       .addEventListener("click", () => {
         this.restartDevice();
       });
-
-    // AP mode start
-    document.getElementById("start-ap-btn").addEventListener("click", () => {
-      this.startAccessPoint();
-    });
 
     // Network scan
     document
@@ -186,7 +188,7 @@ class WiFiConfigManager {
       return;
     }
 
-    this.showToast("Applying network mode...", "info");
+    this.showToast("Saving network mode configuration...", "info");
 
     try {
       const response = await fetch("/wifi/set-mode", {
@@ -203,27 +205,29 @@ class WiFiConfigManager {
       const result = await response.json();
 
       if (result.success) {
-        if (result.restart_required) {
-          this.showToast(
-            `Network mode set to ${selectedMode}. Device will restart to apply changes.`,
-            "success"
-          );
-          // Show restart button
-          const restartBtn = document.getElementById("restart-device-btn");
-          restartBtn.classList.remove("hidden");
-          restartBtn.textContent = `Restart for ${
-            selectedMode.charAt(0).toUpperCase() + selectedMode.slice(1)
-          } Mode`;
-        } else {
-          this.showToast(`Network mode applied: ${selectedMode}`, "success");
-          this.loadCurrentStatus();
-        }
+        this.showToast(
+          `Network mode configuration saved: ${selectedMode}. Restart required to apply changes.`,
+          "success"
+        );
+
+        // Show restart button
+        const restartBtn = document.getElementById("restart-device-btn");
+        restartBtn.classList.remove("hidden");
+        restartBtn.textContent = `Restart to Apply ${
+          selectedMode.charAt(0).toUpperCase() + selectedMode.slice(1)
+        } Mode`;
+
+        // Scroll to restart button to make it more visible
+        restartBtn.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
-        this.showToast(result.message || "Failed to set network mode", "error");
+        this.showToast(
+          result.message || "Failed to save network mode configuration",
+          "error"
+        );
       }
     } catch (error) {
-      console.error("Network mode setting failed:", error);
-      this.showToast("Network error occurred", "error");
+      console.error("Error applying network mode:", error);
+      this.showToast("Failed to save network mode configuration", "error");
     }
   }
 
@@ -326,16 +330,7 @@ class WiFiConfigManager {
     }
   }
 
-  async connectToStation() {
-    // Check if station mode is allowed
-    if (!this.canConnectToStation()) {
-      this.showToast(
-        "WiFi connection is only available in Station or Dual mode. Please change network mode first.",
-        "error"
-      );
-      return;
-    }
-
+  async saveStationConfig() {
     const ssid = document.getElementById("station-ssid").value.trim();
     const password = document.getElementById("station-password").value;
 
@@ -349,22 +344,10 @@ class WiFiConfigManager {
       return;
     }
 
-    this.showToast("Connecting to WiFi network...", "info");
-
-    // Determine which endpoint to use based on current network mode setting
-    const networkModeSelect = document.getElementById("network-mode-select");
-    const selectedMode = networkModeSelect
-      ? networkModeSelect.value
-      : "station";
-
-    // Use dual mode endpoint if dual mode is selected and AP is currently active
-    const isDualMode = selectedMode === "dual";
-    const endpoint = isDualMode
-      ? "/wifi/connect-station-dual"
-      : "/wifi/connect-station";
+    this.showToast("Saving WiFi configuration...", "info");
 
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch("/wifi/save-station-config", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -378,58 +361,67 @@ class WiFiConfigManager {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        if (result.restart_required) {
-          this.showToast(
-            "Configuration saved! Device restart required.",
-            "warning"
-          );
-
-          // Show restart button
-          document
-            .getElementById("restart-device-btn")
-            .classList.remove("hidden");
-
-          // Show restart instruction
-          setTimeout(() => {
-            this.showToast(
-              "Please restart the device to connect to the WiFi network.",
-              "info"
-            );
-          }, 3000);
-
-          // Clear password field for security
-          document.getElementById("station-password").value = "";
-        } else {
-          this.showToast(
-            `Connected successfully! IP: ${result.ip}${
-              isDualMode ? " (Dual Mode)" : ""
-            }`,
-            "success"
-          );
-          this.loadCurrentStatus();
-
-          // Clear password field for security
-          document.getElementById("station-password").value = "";
-
-          // Note: Page might reload due to network change
-          setTimeout(() => {
-            if (result.ip && result.ip !== window.location.hostname) {
-              this.showToast("Network changed. Redirecting...", "info");
-              setTimeout(() => {
-                window.location.hostname = result.ip;
-              }, 2000);
-            }
-          }, 3000);
-        }
+        this.showToast("WiFi configuration saved successfully!", "success");
+        // Clear the password field for security
+        document.getElementById("station-password").value = "";
       } else {
-        this.showToast(result.message || "Connection failed", "error");
+        this.showToast(
+          result.message || "Failed to save WiFi configuration",
+          "error"
+        );
       }
     } catch (error) {
-      console.error("Station connection error:", error);
-      this.showToast(
-        "Failed to connect. Please check your credentials.",
-        "error"
-      );
+      console.error("Error saving station config:", error);
+      this.showToast("Network error occurred", "error");
+    }
+  }
+
+  async saveAccessPointConfig() {
+    const ssid = document.getElementById("ap-ssid").value.trim();
+    const password = document.getElementById("ap-password").value;
+
+    if (!ssid) {
+      this.showToast("Please enter an Access Point name", "error");
+      return;
+    }
+
+    if (!password || password.length < 8) {
+      this.showToast("Password must be at least 8 characters long", "error");
+      return;
+    }
+
+    this.showToast("Saving Access Point configuration...", "info");
+
+    try {
+      const response = await fetch("/wifi/save-ap-config", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ssid: ssid,
+          password: password,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        this.showToast(
+          "Access Point configuration saved successfully!",
+          "success"
+        );
+        // Clear the password field for security
+        document.getElementById("ap-password").value = "";
+      } else {
+        this.showToast(
+          result.message || "Failed to save Access Point configuration",
+          "error"
+        );
+      }
+    } catch (error) {
+      console.error("Error saving AP config:", error);
+      this.showToast("Network error occurred", "error");
     }
   }
 

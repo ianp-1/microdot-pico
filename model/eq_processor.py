@@ -67,11 +67,11 @@ class EQProcessor:
                 self.last_control_source[band] = 'physical'
                 self.last_control_time[band] = current_time
                 
-                print(f"[EQ DIAL] {band}: {old_value:.1f} -> {new_value:.1f} dB (physical control)")
+                #print(f"[EQ DIAL] {band}: {old_value:.1f} -> {new_value:.1f} dB (physical control)")
                 updated = True
 
         if updated:
-            print(f"[EQ] Current - Low: {self.live_db['low']:.1f} dB, Mid: {self.live_db['mid']:.1f} dB, High: {self.live_db['high']:.1f} dB")
+            #print(f"[EQ] Current - Low: {self.live_db['low']:.1f} dB, Mid: {self.live_db['mid']:.1f} dB, High: {self.live_db['high']:.1f} dB")
             
             # Notify all callbacks with both EQ data and control source info
             callback_data = {

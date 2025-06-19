@@ -14,7 +14,7 @@ class WiFiConfig:
     def load_config(self):
         """Load configuration from file or create default"""
         default_config = {
-            'mode': 'ap',  # Default to AP mode
+            'mode': 'ap',  # Default to AP mode: 'station', 'ap', or 'dual'
             'station': {
                 'ssid': '',
                 'password': ''
@@ -58,8 +58,8 @@ class WiFiConfig:
         return self.config.get('mode', 'ap')  # Default to AP mode
     
     def set_mode(self, mode):
-        """Set WiFi mode ('station' or 'ap')"""
-        if mode in ['station', 'ap']:
+        """Set WiFi mode ('station', 'ap', or 'dual')"""
+        if mode in ['station', 'ap', 'dual']:
             self.config['mode'] = mode
             return self.save_config()
         return False

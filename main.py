@@ -4,6 +4,7 @@ import uasyncio as asyncio
 from model.model import AudioModel
 from model.wifi_manager import WiFiManager
 import json
+import machine
 
 app = Microdot()
 model = AudioModel()
@@ -175,6 +176,49 @@ def wifi_status(request):
     """Return current WiFi status"""
     return wifi_manager.get_status()
 
+@app.route('/wifi/status-detailed')
+def wifi_status_detailed(request):
+    """Return detailed WiFi status"""
+    return wifi_manager.get_current_status_detailed()
+
+@app.route('/wifi/config')
+def wifi_config(request):
+    """Return saved WiFi configuration for autofill"""
+    try:
+        config = wifi_manager.config
+        return {
+            'success': True,
+            'config': {
+                'mode': config.get_mode(),
+                'station': config.get_station_config(),
+                'ap': config.get_ap_config()
+            }
+        }
+    except Exception as e:
+        print(f"[WiFi] Config fetch error: {e}")
+        return {'success': False, 'message': 'Failed to fetch configuration'}
+
+@app.post('/wifi/set-mode')
+async def wifi_set_mode(request):
+    """Set network mode (station, ap, dual)"""
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        mode = data.get('mode', '').strip().lower()
+        restart_required = data.get('restart_required', True)
+        
+        if mode not in ['station', 'ap', 'dual']:
+            return {'success': False, 'message': 'Invalid mode. Use: station, ap, or dual'}
+        
+        result = await wifi_manager.set_network_mode(mode, restart_required)
+        return result
+        
+    except (ValueError, KeyError) as e:
+        print(f"[WiFi] JSON parse error: {e}")
+        return {'success': False, 'message': 'Invalid request data'}
+    except Exception as e:
+        print(f"[WiFi] Set mode error: {e}")
+        return {'success': False, 'message': 'Failed to set network mode'}
+
 @app.post('/wifi/connect-station')
 async def wifi_connect_station(request):
     """Connect to a WiFi network in station mode"""
@@ -195,6 +239,28 @@ async def wifi_connect_station(request):
         return {'success': False, 'message': 'Invalid request data'}
     except Exception as e:
         print(f"[WiFi] Station connect error: {e}")
+        return {'success': False, 'message': 'Connection failed'}
+
+@app.post('/wifi/connect-station-dual')
+async def wifi_connect_station_dual(request):
+    """Connect to a WiFi network while keeping AP active (dual mode)"""
+    try:
+        # Parse JSON data from request body
+        data = json.loads(request.body.decode('utf-8'))
+        ssid = data.get('ssid', '').strip()
+        password = data.get('password', '')
+        
+        if not ssid:
+            return {'success': False, 'message': 'SSID is required'}
+        
+        result = await wifi_manager.connect_to_station_dual_mode(ssid, password)
+        return result
+        
+    except (ValueError, KeyError) as e:
+        print(f"[WiFi] JSON parse error: {e}")
+        return {'success': False, 'message': 'Invalid request data'}
+    except Exception as e:
+        print(f"[WiFi] Dual station connect error: {e}")
         return {'success': False, 'message': 'Connection failed'}
 
 @app.post('/wifi/start-ap')
@@ -244,23 +310,43 @@ def wifi_restart(request):
 async def setup_network():
     """Setup network using WiFi manager"""
     print("[MAIN] Setting up network...")
-    result = await wifi_manager.setup_network()
-    return result.get('success', False)
+    try:
+        result = await wifi_manager.setup_network()
+        return result.get('success', False)
+    except Exception as e:
+        print(f"[MAIN] Network setup error: {e}")
+        return False
+
+async def setup_background_tasks():
+    """Setup background tasks after network is ready"""
+    print("Starting background tasks...")
+    try:
+        asyncio.create_task(model.monitor_dials_loop())
+    except Exception as e:
+        print(f"[MAIN] Background tasks error: {e}")
 
 # server start
 async def main():
-    # Ensure network is ready before starting server
-    network_ready = await setup_network()
-    
-    if not network_ready:
-        print("Network setup failed, exiting...")
-        return
-    
-    print("Starting background tasks...")
-    asyncio.create_task(model.monitor_dials_loop())
-    
     print("Starting Microdot server on port 80...")
-    await app.start_server(port=80)
+    
+    # Start network setup in background - don't wait for it
+    network_task = asyncio.create_task(setup_network())
+    
+    # Start background tasks regardless of network status
+    background_task = asyncio.create_task(setup_background_tasks())
+    
+    # Start server immediately
+    try:
+        await app.start_server(port=80)
+    except Exception as e:
+        print(f"[MAIN] Server error: {e}")
 
 # run everything
-asyncio.run(main())
+try:
+    asyncio.run(main())
+except KeyboardInterrupt:
+    print("Server stopped by user")
+except Exception as e:
+    print(f"Main error: {e}")
+    import machine
+    machine.reset()

@@ -19,16 +19,31 @@ class WiFiManager:
         self.current_ip = None
     
     async def setup_network(self):
-        """Setup network - check for station mode, otherwise default to AP"""
+        """Setup network based on configuration mode"""
         mode = self.config.get_mode()
         print(f"[WiFi] Setting up network in {mode} mode")
         
         if mode == 'station':
-            # Try to connect to saved station network
+            # Station mode only
             result = await self.connect_to_saved_station()
             return result
+        elif mode == 'dual':
+            # Dual mode: Start AP first, then try to connect to station
+            print("[WiFi] Starting dual mode (AP + Station)")
+            ap_config = self.config.get_ap_config()
+            ap_result = await self.start_access_point(ap_config['ssid'], ap_config['password'], save_config=False, dual_mode=True)
+            
+            if ap_result.get('success'):
+                # Try to connect to station network as well
+                station_result = await self.connect_to_saved_station()
+                if station_result.get('success'):
+                    self.current_mode = 'dual'
+                    print("[WiFi] Dual mode active: AP + Station")
+                else:
+                    print("[WiFi] Dual mode: AP active, station connection failed")
+            return ap_result
         else:
-            # Default to AP mode
+            # Default to AP mode only
             print("[WiFi] Starting in AP mode")
             ap_config = self.config.get_ap_config()
             return await self.start_access_point(ap_config['ssid'], ap_config['password'], save_config=False)
@@ -61,12 +76,13 @@ class WiFiManager:
                 'message': str(e)
             }
     
-    async def start_access_point(self, ssid, password, save_config=True):
+    async def start_access_point(self, ssid, password, save_config=True, dual_mode=False):
         """Start the device as an access point"""
         print(f"[WiFi] Starting Access Point: {ssid}")
         
-        # Deactivate station mode if active (using mm_wlan interface)
-        if mm_wlan_interface.active():
+        # Only deactivate station mode if not in dual mode
+        if not dual_mode and mm_wlan_interface.active():
+            print("[WiFi] Deactivating station interface for AP-only mode")
             mm_wlan_interface.active(False)
             await asyncio.sleep(1)
         
@@ -171,19 +187,28 @@ class WiFiManager:
             }
     
     def get_status(self):
-        """Get current WiFi status"""
-        if self.current_mode == 'station' and mm_wlan.is_connected():
+        """Get current WiFi status (simplified version for backward compatibility)"""
+        detailed = self.get_current_status_detailed()
+        
+        if detailed['mode'] == 'dual':
             return {
-                'mode': 'Station',
-                'ssid': self.current_ssid,
-                'ip': mm_wlan.get_ip(),
+                'mode': 'Dual (AP + Station)',
+                'ssid': f"AP: {detailed['ap']['ssid']}, STA: {detailed['station']['ssid']}",
+                'ip': f"AP: {detailed['ap']['ip']}, STA: {detailed['station']['ip']}",
                 'connected': True
             }
-        elif self.current_mode == 'ap' and self.ap_if.active():
+        elif detailed['mode'] == 'station' and detailed['station']['connected']:
+            return {
+                'mode': 'Station',
+                'ssid': detailed['station']['ssid'],
+                'ip': detailed['station']['ip'],
+                'connected': True
+            }
+        elif detailed['mode'] == 'ap' and detailed['ap']['active']:
             return {
                 'mode': 'Access Point',
-                'ssid': self.current_ssid,
-                'ip': self.current_ip,
+                'ssid': detailed['ap']['ssid'],
+                'ip': detailed['ap']['ip'],
                 'connected': True
             }
         else:
@@ -203,27 +228,43 @@ class WiFiManager:
         print(f"[WiFi] Connecting to saved station: {station_config['ssid']}")
         
         try:
-            # Use mm_wlan for station connection
-            mm_wlan.connect_to_network(station_config['ssid'], station_config['password'], retries=15, verbose=True)
+            # Use mm_wlan for station connection with manual timeout handling
+            start_time = time.time()
+            timeout = 20  # 20 second timeout
             
-            # Connection successful - get IP info
-            if mm_wlan.is_connected():
-                ip_address = mm_wlan.get_ip()
-                self.current_mode = 'station'
-                self.current_ssid = station_config['ssid']
-                self.current_ip = ip_address
+            # Start connection attempt
+            mm_wlan_interface.active(True)
+            await asyncio.sleep(1)
+            
+            # Connect with shorter retries to allow for timeout handling
+            try:
+                mm_wlan.connect_to_network(station_config['ssid'], station_config['password'], retries=5, verbose=True)
+            except Exception as connect_error:
+                print(f"[WiFi] Connection attempt failed: {connect_error}")
+            
+            # Wait for connection with timeout
+            while time.time() - start_time < timeout:
+                if mm_wlan.is_connected():
+                    ip_address = mm_wlan.get_ip()
+                    self.current_mode = 'station'
+                    self.current_ssid = station_config['ssid']
+                    self.current_ip = ip_address
+                    
+                    print(f"[WiFi] Connected to {station_config['ssid']}")
+                    print(f"[WiFi] IP Address: {self.current_ip}")
+                    
+                    return {
+                        'success': True,
+                        'ip': self.current_ip,
+                        'ssid': station_config['ssid'],
+                        'mode': 'station'
+                    }
                 
-                print(f"[WiFi] Connected to {station_config['ssid']}")
-                print(f"[WiFi] IP Address: {self.current_ip}")
-                
-                return {
-                    'success': True,
-                    'ip': self.current_ip,
-                    'ssid': station_config['ssid'],
-                    'mode': 'station'
-                }
-            else:
-                raise Exception("Connection failed - no IP address obtained")
+                await asyncio.sleep(1)  # Non-blocking delay
+            
+            # Timeout reached
+            print(f"[WiFi] Station connection timeout after {timeout} seconds")
+            raise Exception("Connection timeout")
                 
         except Exception as e:
             print(f"[WiFi] Station connection failed: {e}")
@@ -232,3 +273,105 @@ class WiFiManager:
             self.config.set_mode('ap')
             ap_config = self.config.get_ap_config()
             return await self.start_access_point(ap_config['ssid'], ap_config['password'])
+    
+    async def set_network_mode(self, mode, restart_required=True):
+        """Set network mode and optionally restart"""
+        print(f"[WiFi] Setting network mode to: {mode}")
+        
+        if mode not in ['station', 'ap', 'dual']:
+            return {'success': False, 'message': 'Invalid network mode'}
+        
+        # Save the new mode
+        self.config.set_mode(mode)
+        
+        if restart_required:
+            return {
+                'success': True,
+                'restart_required': True,
+                'message': f'Network mode set to {mode}. Device restart required to apply changes.',
+                'mode': mode
+            }
+        else:
+            # Try to apply immediately (limited support)
+            result = await self.setup_network()
+            return result
+    
+    def get_current_status_detailed(self):
+        """Get detailed status including both interfaces"""
+        status = {
+            'mode': self.current_mode or 'unknown',
+            'station': {
+                'connected': False,
+                'ssid': None,
+                'ip': None
+            },
+            'ap': {
+                'active': False,
+                'ssid': None,
+                'ip': None
+            }
+        }
+        
+        # Check station interface
+        if mm_wlan.is_connected():
+            status['station']['connected'] = True
+            status['station']['ssid'] = self.current_ssid if self.current_mode in ['station', 'dual'] else 'Connected'
+            status['station']['ip'] = mm_wlan.get_ip()
+        
+        # Check AP interface
+        if self.ap_if.active() and self.ap_if.ifconfig()[0] != '0.0.0.0':
+            status['ap']['active'] = True
+            ap_config = self.config.get_ap_config()
+            status['ap']['ssid'] = ap_config['ssid']
+            status['ap']['ip'] = self.ap_if.ifconfig()[0]
+        
+        # Determine actual mode
+        if status['station']['connected'] and status['ap']['active']:
+            status['mode'] = 'dual'
+        elif status['station']['connected']:
+            status['mode'] = 'station'
+        elif status['ap']['active']:
+            status['mode'] = 'ap'
+        else:
+            status['mode'] = 'disconnected'
+        
+        return status
+    
+    async def connect_to_station_dual_mode(self, ssid, password):
+        """Connect to a WiFi network while keeping AP active (dual mode)"""
+        print(f"[WiFi] Connecting to station in dual mode: {ssid}")
+        
+        try:
+            # Save station configuration
+            self.config.set_station_config(ssid, password)
+            
+            # Use mm_wlan for station connection without disrupting AP
+            mm_wlan.connect_to_network(ssid, password, retries=15, verbose=True)
+            
+            # Check if connection was successful
+            if mm_wlan.is_connected():
+                station_ip = mm_wlan.get_ip()
+                print(f"[WiFi] Station connected: {ssid} ({station_ip})")
+                
+                # Update mode to dual if AP is also active
+                if self.ap_if.active():
+                    self.current_mode = 'dual'
+                    print("[WiFi] Dual mode now active")
+                else:
+                    self.current_mode = 'station'
+                
+                return {
+                    'success': True,
+                    'ip': station_ip,
+                    'ssid': ssid,
+                    'mode': self.current_mode
+                }
+            else:
+                raise Exception("Failed to obtain IP address")
+                
+        except Exception as e:
+            print(f"[WiFi] Dual mode station connection failed: {e}")
+            return {
+                'success': False,
+                'message': str(e)
+            }

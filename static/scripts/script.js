@@ -1,4 +1,5 @@
 import AudioDashboardApp from "./audio-dashboard.js";
+import WiFiConfigManager from "./wifi-config.js";
 
 // console.log("Script.js loading...");
 
@@ -7,11 +8,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   try {
     const app = new AudioDashboardApp();
+    const wifiConfig = new WiFiConfigManager();
 
-    // Store app instance globally for debugging
+    // Store app instances globally for debugging
     window.audioApp = app;
+    window.wifiConfig = wifiConfig;
 
-    // console.log("App initialized successfully");
+    // console.log("Apps initialized successfully");
 
     // Cleanup on page unload
     window.addEventListener("beforeunload", () => {

@@ -1,18 +1,13 @@
 from lib.microdot import Microdot, Response, send_file, websocket
 from lib.microdot.websocket import with_websocket
-import lib.mm_wlan as mm_wlan
 import uasyncio as asyncio
 from model.model import AudioModel
-import network
+from model.wifi_manager import WiFiManager
 import json
-
-USE_AP_MODE = False
-
-ssid = 'SUGA Guest 5G'
-password = 'suga22wifi'
 
 app = Microdot()
 model = AudioModel()
+wifi_manager = WiFiManager()
 
 @app.route('/')
 def index(request):
@@ -174,43 +169,83 @@ def current_eq_json(request):
         'high': model.eq_processor.live_db['high']
     }
 
-async def setup_network():
-    if USE_AP_MODE:
-        print("Setting up Access Point...")
-        ap = network.WLAN(network.AP_IF)
-        ap.active(True)
+# WiFi Configuration Endpoints
+@app.route('/wifi/status')
+def wifi_status(request):
+    """Return current WiFi status"""
+    return wifi_manager.get_status()
+
+@app.post('/wifi/connect-station')
+async def wifi_connect_station(request):
+    """Connect to a WiFi network in station mode"""
+    try:
+        # Parse JSON data from request body
+        data = json.loads(request.body.decode('utf-8'))
+        ssid = data.get('ssid', '').strip()
+        password = data.get('password', '')
         
-        # Give it a moment to activate
-        await asyncio.sleep(1)
+        if not ssid:
+            return {'success': False, 'message': 'SSID is required'}
         
-        ap.config(
-            essid='PicoW-Audio',
-            password='picowifi'
-        )
+        result = await wifi_manager.connect_to_station(ssid, password)
+        return result
         
-        # Wait for AP to become active and configured
-        max_wait = 15
-        while max_wait > 0:
-            if ap.active() and ap.ifconfig()[0] != '0.0.0.0':
-                break
-            print(f"Waiting for AP... {max_wait}")
+    except (ValueError, KeyError) as e:
+        print(f"[WiFi] JSON parse error: {e}")
+        return {'success': False, 'message': 'Invalid request data'}
+    except Exception as e:
+        print(f"[WiFi] Station connect error: {e}")
+        return {'success': False, 'message': 'Connection failed'}
+
+@app.post('/wifi/start-ap')
+async def wifi_start_ap(request):
+    """Start the device as an access point"""
+    try:
+        # Parse JSON data from request body
+        data = json.loads(request.body.decode('utf-8'))
+        ssid = data.get('ssid', 'PicoW-Audio').strip()
+        password = data.get('password', 'picowifi')
+        
+        if len(password) < 8:
+            return {'success': False, 'message': 'Password must be at least 8 characters'}
+        
+        result = await wifi_manager.start_access_point(ssid, password)
+        return result
+        
+    except (ValueError, KeyError) as e:
+        print(f"[WiFi] JSON parse error: {e}")
+        return {'success': False, 'message': 'Invalid request data'}
+    except Exception as e:
+        print(f"[WiFi] AP start error: {e}")
+        return {'success': False, 'message': 'Failed to start Access Point'}
+
+@app.route('/wifi/scan')
+def wifi_scan(request):
+    """Scan for available WiFi networks"""
+    return wifi_manager.scan_networks()
+
+@app.post('/wifi/restart')
+def wifi_restart(request):
+    """Restart the device to apply WiFi configuration changes"""
+    import machine
+    try:
+        print("[WiFi] Device restart requested")
+        # Small delay to allow response to be sent
+        import uasyncio as asyncio
+        async def delayed_restart():
             await asyncio.sleep(1)
-            max_wait -= 1
-        
-        if ap.active() and ap.ifconfig()[0] != '0.0.0.0':
-            print("✓ Access Point active and ready")
-            print("Network config:", ap.ifconfig())
-            print("Connect to network: PicoW-Audio")
-            print("Password: picowifi")
-            print("Then visit: http://192.168.4.1")
-            return True
-        else:
-            print("✗ Failed to activate Access Point")
-            return False
-    else:
-        mm_wlan.connect_to_network(ssid, password)
-        print("Connected to WLAN")
-        return True
+            machine.reset()
+        asyncio.create_task(delayed_restart())
+        return {'success': True, 'message': 'Device restarting...'}
+    except Exception as e:
+        print(f"[WiFi] Restart error: {e}")
+        return {'success': False, 'message': 'Failed to restart device'}
+
+async def setup_network():
+    """Setup network using WiFi manager"""
+    print("[MAIN] Setting up network...")
+    result = await wifi_manager.setup_network()
+    return result.get('success', False)
 
 # server start
 async def main():

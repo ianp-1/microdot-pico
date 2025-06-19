@@ -272,47 +272,61 @@ class WiFiConfigManager {
     const ap = detailedStatus.ap;
 
     let displayMode = "";
-    let displaySSID = "";
-    let displayIP = "";
 
-    if (mode === "dual") {
-      displayMode = "Dual (AP + Station)";
-      displaySSID = `AP: ${ap.ssid || "-"}, STA: ${station.ssid || "-"}`;
-      displayIP = `AP: ${ap.ip || "-"}, STA: ${station.ip || "-"}`;
-    } else if (mode === "station" && station.connected) {
-      displayMode = "Station";
-      displaySSID = station.ssid || "-";
-      displayIP = station.ip || "-";
-    } else if (mode === "ap" && ap.active) {
-      displayMode = "Access Point";
-      displaySSID = ap.ssid || "-";
-      displayIP = ap.ip || "-";
-    } else {
-      displayMode = "Disconnected";
-      displaySSID = "-";
-      displayIP = "-";
-    }
-
-    document.getElementById("current-wifi-mode").textContent = displayMode;
-    document.getElementById("current-ssid").textContent = displaySSID;
-    document.getElementById("current-ip").textContent = displayIP;
-
-    // Update badge colors based on mode
+    // Update mode badge
     const modeBadge = document.getElementById("current-wifi-mode");
     modeBadge.className = "badge badge-sm";
 
     if (mode === "dual") {
+      displayMode = "Dual (AP + Station)";
       modeBadge.classList.add("badge-info");
-    } else if (mode === "station" && station.connected) {
-      modeBadge.classList.add("badge-success");
-    } else if (mode === "ap" && ap.active) {
-      modeBadge.classList.add("badge-secondary");
+
+      // Show dual mode layout, hide single mode layout
+      document.getElementById("single-mode-info").classList.add("hidden");
+      document.getElementById("dual-mode-info").classList.remove("hidden");
+
+      // Update AP info
+      document.getElementById("ap-ssid").textContent = ap.ssid || "-";
+      document.getElementById("ap-ip").textContent = ap.ip || "-";
+
+      // Update Station info
+      document.getElementById("station-ssid").textContent = station.ssid || "-";
+      document.getElementById("station-ip").textContent = station.ip || "-";
     } else {
-      modeBadge.classList.add("badge-warning");
+      // Show single mode layout, hide dual mode layout
+      document.getElementById("single-mode-info").classList.remove("hidden");
+      document.getElementById("dual-mode-info").classList.add("hidden");
+
+      let displaySSID = "-";
+      let displayIP = "-";
+
+      if (mode === "station" && station.connected) {
+        displayMode = "Station";
+        displaySSID = station.ssid || "-";
+        displayIP = station.ip || "-";
+        modeBadge.classList.add("badge-success");
+      } else if (mode === "ap" && ap.active) {
+        displayMode = "Access Point";
+        displaySSID = ap.ssid || "-";
+        displayIP = ap.ip || "-";
+        modeBadge.classList.add("badge-secondary");
+      } else {
+        displayMode = "Disconnected";
+        modeBadge.classList.add("badge-warning");
+      }
+
+      document.getElementById("current-ssid").textContent = displaySSID;
+      document.getElementById("current-ip").textContent = displayIP;
     }
+
+    document.getElementById("current-wifi-mode").textContent = displayMode;
   }
 
   updateStatusDisplayBasic(status) {
+    // Always show single mode layout for basic status
+    document.getElementById("single-mode-info").classList.remove("hidden");
+    document.getElementById("dual-mode-info").classList.add("hidden");
+
     document.getElementById("current-wifi-mode").textContent = status.mode;
     document.getElementById("current-ssid").textContent = status.ssid || "-";
     document.getElementById("current-ip").textContent = status.ip || "-";
@@ -325,6 +339,8 @@ class WiFiConfigManager {
       modeBadge.classList.add("badge-secondary");
     } else if (status.mode === "Station" && status.connected) {
       modeBadge.classList.add("badge-success");
+    } else if (status.mode === "Dual (AP + Station)") {
+      modeBadge.classList.add("badge-info");
     } else {
       modeBadge.classList.add("badge-warning");
     }

@@ -37,9 +37,22 @@ class WiFiConfig:
                         for subkey in default_config[key]:
                             if subkey not in config[key]:
                                 config[key][subkey] = default_config[key][subkey]
+                print(f"[WiFi Config] Loaded configuration from {CONFIG_FILE}")
                 return config
-        except (OSError, ValueError) as e:
-            print(f"Error loading WiFi config: {e}")
+        except OSError as e:
+            if e.args[0] == 2:  # ENOENT - File not found
+                print(f"[WiFi Config] Configuration file not found, creating default config")
+                # Create default config file
+                try:
+                    with open(CONFIG_FILE, 'w') as f:
+                        json.dump(default_config, f)
+                    print(f"[WiFi Config] Created default configuration file: {CONFIG_FILE}")
+                except Exception as create_error:
+                    print(f"[WiFi Config] Failed to create default config file: {create_error}")
+            else:
+                print(f"[WiFi Config] OS error loading config: {e}")
+        except ValueError as e:
+            print(f"[WiFi Config] Invalid JSON in config file: {e}")
         
         return default_config
     

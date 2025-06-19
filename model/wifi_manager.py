@@ -39,8 +39,18 @@ class WiFiManager:
                 if station_result.get('success'):
                     self.current_mode = 'dual'
                     print("[WiFi] Dual mode active: AP + Station")
+                    return {
+                        'success': True,
+                        'mode': 'dual',
+                        'ap': ap_result,
+                        'station': station_result
+                    }
                 else:
-                    print("[WiFi] Dual mode: AP active, station connection failed")
+                    # Station connection failed, fall back to AP only mode
+                    print("[WiFi] Dual mode: AP active, station connection failed - falling back to AP mode")
+                    self.current_mode = 'ap'
+                    self.config.set_mode('ap')  # Update config to reflect actual state
+                    ap_result['mode'] = 'ap'  # Update result mode
             return ap_result
         else:
             # Default to AP mode only
@@ -313,27 +323,47 @@ class WiFiManager:
         }
         
         # Check station interface
-        if mm_wlan.is_connected():
-            status['station']['connected'] = True
-            status['station']['ssid'] = self.current_ssid if self.current_mode in ['station', 'dual'] else 'Connected'
-            status['station']['ip'] = mm_wlan.get_ip()
+        station_connected = False
+        try:
+            if mm_wlan.is_connected():
+                status['station']['connected'] = True
+                status['station']['ssid'] = self.current_ssid if self.current_ssid else 'Connected'
+                status['station']['ip'] = mm_wlan.get_ip()
+                station_connected = True
+        except Exception as e:
+            print(f"[WiFi] Station check error: {e}")
         
         # Check AP interface
-        if self.ap_if.active() and self.ap_if.ifconfig()[0] != '0.0.0.0':
-            status['ap']['active'] = True
-            ap_config = self.config.get_ap_config()
-            status['ap']['ssid'] = ap_config['ssid']
-            status['ap']['ip'] = self.ap_if.ifconfig()[0]
+        ap_active = False
+        try:
+            if self.ap_if.active() and self.ap_if.ifconfig()[0] != '0.0.0.0':
+                status['ap']['active'] = True
+                ap_config = self.config.get_ap_config()
+                status['ap']['ssid'] = ap_config['ssid']
+                status['ap']['ip'] = self.ap_if.ifconfig()[0]
+                ap_active = True
+        except Exception as e:
+            print(f"[WiFi] AP check error: {e}")
         
-        # Determine actual mode
-        if status['station']['connected'] and status['ap']['active']:
+        # Determine actual mode based on what's actually running
+        if station_connected and ap_active:
             status['mode'] = 'dual'
-        elif status['station']['connected']:
+            self.current_mode = 'dual'  # Update our internal state
+        elif station_connected:
             status['mode'] = 'station'
-        elif status['ap']['active']:
+            self.current_mode = 'station'
+        elif ap_active:
             status['mode'] = 'ap'
+            self.current_mode = 'ap'
         else:
             status['mode'] = 'disconnected'
+            self.current_mode = None
+        
+        # If the actual mode doesn't match config, log it (but don't auto-update config 
+        # as that could cause issues if user intentionally set a mode that requires restart)
+        config_mode = self.config.get_mode()
+        if config_mode != status['mode'] and status['mode'] != 'disconnected':
+            print(f"[WiFi] Config mode ({config_mode}) doesn't match actual mode ({status['mode']})")
         
         return status
     

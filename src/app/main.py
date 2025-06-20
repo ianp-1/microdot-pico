@@ -1,15 +1,18 @@
+import sys
+# Add parent directory to path so we can import lib and model modules
+sys.path.append('..')
+
 from lib.microdot import Microdot, send_file
 from lib.microdot.websocket import with_websocket
 import uasyncio as asyncio
 import machine
 from model.model import AudioModel
 from model.wifi_manager import WiFiManager
-
-# Import everything needed from the app package
-from app import (
-    WebSocketHandler, WiFiRoutes, AudioRoutes,
-    SERVER_PORT, main_logger
-)
+from .websocket_handler import WebSocketHandler
+from .wifi_routes import WiFiRoutes
+from .audio_routes import AudioRoutes
+from .config import SERVER_PORT
+from .logger import main_logger
 
 app = Microdot()
 model = AudioModel()
@@ -24,7 +27,7 @@ audio_routes = AudioRoutes(model)
 @app.route('/')
 def index(request):
     """Serve the main dashboard with compression support"""
-    return send_file('templates/dashboard.min.html', compressed=True,  file_extension='.gz')
+    return send_file('templates/dashboard.min.html', compressed=True, file_extension='.gz')
 
 @app.route('/static/<path:path>')
 def static_files(request, path):

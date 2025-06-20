@@ -12,6 +12,11 @@ class WiFiConfigManager {
     this.loadCurrentStatus();
     this.loadConfigForAutofill();
     this.updateConnectButtonText();
+
+    // Also try to autofill from current running status
+    setTimeout(() => {
+      this.autofillFromCurrentStatus();
+    }, 500); // Delay to ensure DOM is ready
   }
 
   bindEvents() {
@@ -21,6 +26,7 @@ class WiFiConfigManager {
       .addEventListener("change", (e) => {
         if (e.target.checked) {
           this.loadCurrentStatus();
+          this.autofillFromCurrentStatus(); // Refresh autofill when drawer opens
         }
       });
 
@@ -72,7 +78,38 @@ class WiFiConfigManager {
       if (e.target.closest(".network-item")) {
         const networkItem = e.target.closest(".network-item");
         const ssid = networkItem.dataset.ssid;
-        document.getElementById("station-ssid").value = ssid;
+        const stationInput = document.getElementById("station-ssid");
+
+        console.log("WiFi: Network item clicked", {
+          ssid,
+          networkItem,
+          stationInput,
+        });
+
+        if (stationInput && ssid) {
+          stationInput.value = ssid;
+          stationInput.focus(); // Focus the input to make it clear it was filled
+          console.log(`WiFi: Auto-filled SSID: ${ssid}`);
+
+          // Show a brief visual feedback
+          stationInput.style.backgroundColor = "#22c55e20";
+          stationInput.style.transition = "background-color 0.3s ease";
+          setTimeout(() => {
+            stationInput.style.backgroundColor = "";
+          }, 1000);
+
+          // Show toast notification using a method reference
+          try {
+            this.showToast(`Selected network: ${ssid}`, "info");
+          } catch (error) {
+            console.log(`WiFi: Selected network: ${ssid}`); // Fallback
+          }
+        } else {
+          console.warn("WiFi: Could not auto-fill SSID", {
+            stationInput,
+            ssid,
+          });
+        }
       }
     });
   }
@@ -286,11 +323,12 @@ class WiFiConfigManager {
       document.getElementById("dual-mode-info").classList.remove("hidden");
 
       // Update AP info
-      document.getElementById("ap-ssid").textContent = ap.ssid || "-";
+      document.getElementById("ap-ssid-display").textContent = ap.ssid || "-";
       document.getElementById("ap-ip").textContent = ap.ip || "-";
 
       // Update Station info
-      document.getElementById("station-ssid").textContent = station.ssid || "-";
+      document.getElementById("station-ssid-display").textContent =
+        station.ssid || "-";
       document.getElementById("station-ip").textContent = station.ip || "-";
     } else {
       // Show single mode layout, hide dual mode layout
@@ -575,6 +613,11 @@ class WiFiConfigManager {
       .join("");
 
     networkList.innerHTML = networkItems;
+
+    // Test network click functionality after displaying networks
+    setTimeout(() => {
+      this.testNetworkClick();
+    }, 100);
   }
 
   getSignalStrengthIcon(rssi) {
@@ -756,6 +799,7 @@ class WiFiConfigManager {
       }
 
       const result = await response.json();
+      console.log("WiFi: Config loaded for autofill", result);
 
       if (result.success && result.config) {
         const config = result.config;
@@ -768,10 +812,17 @@ class WiFiConfigManager {
           if (stationSSID) {
             stationSSID.value = config.station.ssid;
             stationSSID.placeholder = `Saved: ${config.station.ssid}`;
+            console.log(
+              `WiFi: Auto-filled station SSID: ${config.station.ssid}`
+            );
           }
-          if (stationPassword && config.station.password) {
-            stationPassword.value = config.station.password;
-            stationPassword.placeholder = "Saved password";
+          // Don't autofill passwords for security reasons, just update placeholder
+          if (stationPassword) {
+            if (config.station.password) {
+              stationPassword.placeholder = "Saved password (hidden)";
+            } else {
+              stationPassword.placeholder = "Enter WiFi password";
+            }
           }
         }
 
@@ -783,10 +834,15 @@ class WiFiConfigManager {
           if (apSSID && config.ap.ssid) {
             apSSID.value = config.ap.ssid;
             apSSID.placeholder = `Default: ${config.ap.ssid}`;
+            console.log(`WiFi: Auto-filled AP SSID: ${config.ap.ssid}`);
           }
-          if (apPassword && config.ap.password) {
-            apPassword.value = config.ap.password;
-            apPassword.placeholder = "Default password";
+          // Don't autofill passwords for security reasons, just update placeholder
+          if (apPassword) {
+            if (config.ap.password) {
+              apPassword.placeholder = "Saved password (hidden)";
+            } else {
+              apPassword.placeholder = "Enter access point password";
+            }
           }
         }
 
@@ -796,6 +852,7 @@ class WiFiConfigManager {
         );
         if (networkModeSelect && config.mode) {
           networkModeSelect.value = config.mode;
+          console.log(`WiFi: Set network mode to: ${config.mode}`);
           // Update UI based on loaded mode
           this.updateConnectButtonText();
         }
@@ -803,6 +860,58 @@ class WiFiConfigManager {
     } catch (error) {
       console.warn("Failed to load config for autofill:", error);
       // Don't show error to user - this is a nice-to-have feature
+    }
+  }
+
+  // New method to autofill based on current running configuration
+  async autofillFromCurrentStatus() {
+    try {
+      const response = await fetch("/wifi/status-detailed");
+      if (!response.ok) return;
+
+      const status = await response.json();
+      console.log("WiFi: Autofilling from current status", status);
+
+      // Auto-fill station SSID if currently connected
+      if (status.station && status.station.connected && status.station.ssid) {
+        const stationSSID = document.getElementById("station-ssid");
+        if (stationSSID && !stationSSID.value) {
+          // Only fill if empty
+          stationSSID.value = status.station.ssid;
+          stationSSID.placeholder = `Currently connected: ${status.station.ssid}`;
+          console.log(
+            `WiFi: Auto-filled current station SSID: ${status.station.ssid}`
+          );
+        }
+      }
+
+      // Auto-fill AP SSID if currently running
+      if (status.ap && status.ap.active && status.ap.ssid) {
+        const apSSID = document.getElementById("ap-ssid");
+        if (apSSID && !apSSID.value) {
+          // Only fill if empty
+          apSSID.value = status.ap.ssid;
+          apSSID.placeholder = `Currently running: ${status.ap.ssid}`;
+          console.log(`WiFi: Auto-filled current AP SSID: ${status.ap.ssid}`);
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to autofill from current status:", error);
+    }
+  }
+
+  // Test method to verify network item click functionality
+  testNetworkClick() {
+    console.log("WiFi: Testing network click functionality...");
+    const networkItems = document.querySelectorAll(".network-item");
+    console.log(`WiFi: Found ${networkItems.length} network items`);
+
+    const stationInput = document.getElementById("station-ssid");
+    console.log("WiFi: Station input element:", stationInput);
+
+    if (networkItems.length > 0) {
+      console.log("WiFi: First network item:", networkItems[0]);
+      console.log("WiFi: First network SSID:", networkItems[0].dataset.ssid);
     }
   }
 }

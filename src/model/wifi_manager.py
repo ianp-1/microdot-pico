@@ -34,23 +34,34 @@ class WiFiManager:
             ap_result = await self.start_access_point(ap_config['ssid'], ap_config['password'], save_config=False, dual_mode=True)
             
             if ap_result.get('success'):
-                # Try to connect to station network as well
-                station_result = await self.connect_to_saved_station()
-                if station_result.get('success'):
-                    self.current_mode = 'dual'
-                    print("[WiFi] Dual mode active: AP + Station")
-                    return {
-                        'success': True,
-                        'mode': 'dual',
-                        'ap': ap_result,
-                        'station': station_result
-                    }
+                # Check if we have station config before trying to connect
+                station_config = self.config.get_station_config()
+                if station_config['ssid']:  # Only attempt station connection if we have an SSID
+                    station_result = await self.connect_to_saved_station()
+                    if station_result.get('success'):
+                        self.current_mode = 'dual'
+                        print("[WiFi] Dual mode active: AP + Station")
+                        return {
+                            'success': True,
+                            'mode': 'dual',
+                            'ap': ap_result,
+                            'station': station_result
+                        }
+                    else:
+                        print("[WiFi] Dual mode: Station connection failed, continuing with AP only")
                 else:
-                    # Station connection failed, fall back to AP only mode
-                    print("[WiFi] Dual mode: AP active, station connection failed - falling back to AP mode")
-                    self.current_mode = 'ap'
-                    self.config.set_mode('ap')  # Update config to reflect actual state
-                    ap_result['mode'] = 'ap'  # Update result mode
+                    print("[WiFi] Dual mode: No station config found, continuing with AP only")
+                
+                # Station connection failed or no config, continue with AP only
+                self.current_mode = 'ap'
+                # Don't update config mode - user intentionally set dual mode
+                return {
+                    'success': True,
+                    'mode': 'ap',  # Actual running mode
+                    'config_mode': 'dual',  # User's intended mode
+                    'ap': ap_result,
+                    'message': 'AP started. Station connection not available - no saved configuration or connection failed.'
+                }
             return ap_result
         else:
             # Default to AP mode only
@@ -232,7 +243,10 @@ class WiFiManager:
     async def connect_to_saved_station(self):
         """Connect to saved station network - used during startup"""
         station_config = self.config.get_station_config()
-        if not station_config['ssid']:
+        
+        # Check if we have a valid station configuration
+        if not station_config['ssid'] or not station_config['ssid'].strip():
+            print("[WiFi] No saved station configuration or empty SSID")
             return {'success': False, 'message': 'No saved station configuration'}
         
         print(f"[WiFi] Connecting to saved station: {station_config['ssid']}")
@@ -278,11 +292,7 @@ class WiFiManager:
                 
         except Exception as e:
             print(f"[WiFi] Station connection failed: {e}")
-            # Fall back to AP mode
-            print("[WiFi] Falling back to AP mode")
-            self.config.set_mode('ap')
-            ap_config = self.config.get_ap_config()
-            return await self.start_access_point(ap_config['ssid'], ap_config['password'])
+            return {'success': False, 'message': f'Station connection failed: {str(e)}'}
     
     async def set_network_mode(self, mode, restart_required=True):
         """Set network mode and optionally restart"""
@@ -359,11 +369,15 @@ class WiFiManager:
             status['mode'] = 'disconnected'
             self.current_mode = None
         
-        # If the actual mode doesn't match config, log it (but don't auto-update config 
-        # as that could cause issues if user intentionally set a mode that requires restart)
+        # If the actual mode doesn't match config, log it but only warn for meaningful mismatches
         config_mode = self.config.get_mode()
         if config_mode != status['mode'] and status['mode'] != 'disconnected':
-            print(f"[WiFi] Config mode ({config_mode}) doesn't match actual mode ({status['mode']})")
+            # Only warn if this is an unexpected mismatch
+            # Don't warn for dual->ap fallback as that's expected behavior
+            if not (config_mode == 'dual' and status['mode'] == 'ap'):
+                print(f"[WiFi] Config mode ({config_mode}) doesn't match actual mode ({status['mode']})")
+            else:
+                print(f"[WiFi] Running in AP mode, configured for dual mode (station connection not available)")
         
         return status
     

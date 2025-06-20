@@ -28,36 +28,51 @@ echo "🎨 Building CSS..."
 "$TAILWIND_BIN" -i "$STATIC_BUILD/input.css" -o "$STATIC_BUILD/output.css" --minify
 rm -f "$TAILWIND_BIN"
 
-# Step 3: Minify and gzip JS
+# Step 3: Minify and gzip all JS files in static/ and static/scripts/
 echo "📦 Minifying and gzipping JS..."
-for js in "$STATIC_BUILD/"*.js; do
+find "$STATIC_BUILD" -type f -name '*.js' | while read -r js; do
   min="${js%.js}.min.js"
-  terser "$js" -o "$min" -c -m && gzip -f "$min" && rm -f "$js" "$min"
+
+  # Minify using terser
+  terser "$js" -o "$min" -c -m
+
+  # Gzip the minified file
+  gzip -f "$min"
+
+  # Rename .min.js.gz to .js.gz (for Microdot serving compatibility)
+  mv "${min}.gz" "${js}.gz"
+
+  # Remove original files
+  rm -f "$js" "$min"
 done
 
 # Step 4: Gzip CSS
+echo "🎀 Gzipping CSS..."
 gzip -f "$STATIC_BUILD/output.css"
-rm -f "$STATIC_BUILD/output.css"
+rm -f "$STATIC_BUILD/output.css" "$STATIC_BUILD/input.css"
 
-# # Step 5: Minify + gzip HTML
-# echo "📄 Minifying and gzipping HTML..."
-# for html in "$TEMPLATES_BUILD/"*.html; do
-#   min="${html%.html}.min.html"
-#   html-minifier-terser "$html" \
-#     --collapse-whitespace \
-#     --remove-comments \
-#     --remove-redundant-attributes \
-#     --use-short-doctype \
-#     --remove-empty-attributes \
-#     --remove-optional-tags \
-#     --minify-js true \
-#     --minify-css true \
-#     --remove-attribute-quotes \
-#     --collapse-boolean-attributes \
-#     --sort-attributes \
-#     --sort-class-name \
-#     -o "$min"
-# done
+# Step 5: Minify + gzip HTML
+echo "📄 Minifying and gzipping HTML..."
+for html in "$TEMPLATES_BUILD/"*.html; do
+  min="${html%.html}.min.html"
+  html-minifier-terser "$html" \
+    --collapse-whitespace \
+    --remove-comments \
+    --remove-redundant-attributes \
+    --use-short-doctype \
+    --remove-empty-attributes \
+    --remove-optional-tags \
+    --minify-js true \
+    --minify-css true \
+    --remove-attribute-quotes \
+    --collapse-boolean-attributes \
+    --sort-attributes \
+    --sort-class-name \
+    -o "$min"
+
+  gzip -f "$min"
+  rm -f "$html"
+done
 
 # Step 6: Upload to Pico W
 echo "📡 Uploading entire build/ to Pico W..."

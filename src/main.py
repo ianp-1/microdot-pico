@@ -12,41 +12,14 @@ wifi_manager = WiFiManager()
 
 @app.route('/')
 def index(request):
-    return send_file('templates/dashboard.html')
+    return send_file('templates/dashboard.min.html', compressed=True, file_extension='.gz')
+
 
 @app.route('/static/<path:path>')
 def static_files(request, path):
     if '..' in path:
-        return Response("Forbidden", status_code=403)
-
-    # Guess content type
-    if path.endswith('.js'):
-        content_type = 'application/javascript'
-    elif path.endswith('.css'):
-        content_type = 'text/css'
-    elif path.endswith('.svg'):
-        content_type = 'image/svg+xml'
-    elif path.endswith('.html'):
-        content_type = 'text/html'
-    elif path.endswith('.json'):
-        content_type = 'application/json'
-    else:
-        content_type = 'application/octet-stream'
-
-    # Try serving .gz version first
-    gz_path = f'static/{path}.gz'
-    try:
-        return send_file(gz_path, content_type=content_type, compressed=True)
-    except OSError:
-        pass  # Fallback to normal
-
-    # Fall back to uncompressed version
-    normal_path = f'static/{path}'
-    try:
-        return send_file(normal_path, content_type=content_type)
-    except OSError as e:
-        print(f"[STATIC] File not found: {path} - {e}")
-        return Response("File not found", status_code=404)
+        return 'Forbidden', 403
+    return send_file(f'static/{path}', compressed=True, file_extension='.gz')
 
 
 @app.post('/toggle-voice-mode')

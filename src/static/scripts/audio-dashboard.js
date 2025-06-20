@@ -182,6 +182,14 @@ export default class AudioDashboardApp {
 
   destroy() {
     // console.log("Destroying Audio Dashboard...");
+
+    // Destroy EQ Chart to clean up resize observers
+    if (this.eqChart) {
+      this.eqChart.destroy();
+      this.eqChart = null;
+    }
+
+    // Close WebSocket connection
     this.wsManager?.socket?.close();
   }
 }

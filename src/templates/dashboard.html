@@ -12,9 +12,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Audio Dashboard</title>
-    <script src="/static/chart.min.js"></script>
+    <script src="/static/chart.js"></script>
     <link href="/static/output.css" rel="stylesheet" />
-    <script src="/static/theme-change.min.js"></script>
+    <script src="/static/theme-change.js"></script>
     <script type="module" src="/static/scripts/script.js"></script>
   </head>
   <body class="bg-gradient-to-br from-base-100 to-base-200 min-h-screen p-6">
@@ -583,12 +583,9 @@
             <div
               class="mb-6 p-4 bg-base-200/50 rounded-xl border border-base-300/30"
             >
-              <canvas
-                id="eqChart"
-                width="400"
-                height="200"
-                class="w-full"
-              ></canvas>
+              <div class="relative w-full h-48">
+                <canvas id="eqChart" class="w-full h-full"></canvas>
+              </div>
             </div>
 
             <!-- EQ Values Display -->

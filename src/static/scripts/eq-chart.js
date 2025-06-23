@@ -4,8 +4,10 @@ export default class EQChart {
     this.ctx = this.canvas.getContext("2d");
     this.options = this.mergeOptions(options);
     this.chart = null;
+    this.resizeObserver = null;
 
     this.init();
+    this.setupResize();
   }
 
   mergeOptions(userOptions) {
@@ -28,6 +30,8 @@ export default class EQChart {
         ],
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         animation: { animation: false },
         scales: {
           y: {
@@ -122,5 +126,62 @@ export default class EQChart {
   getValue(band) {
     const index = { low: 0, mid: 1, high: 2 }[band];
     return this.chart.data.datasets[0].data[index];
+  }
+
+  setupResize() {
+    // Use ResizeObserver for better performance than window resize events
+    if (window.ResizeObserver) {
+      this.resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          // Debounce the resize to avoid excessive updates
+          clearTimeout(this.resizeTimeout);
+          this.resizeTimeout = setTimeout(() => {
+            if (this.chart && this.chart.canvas) {
+              this.chart.resize();
+            }
+          }, 100);
+        }
+      });
+
+      // Observe the canvas container
+      const container = this.canvas.parentElement;
+      if (container) {
+        this.resizeObserver.observe(container);
+      }
+    } else {
+      // Fallback for older browsers
+      window.addEventListener("resize", this.handleWindowResize.bind(this));
+    }
+  }
+
+  handleWindowResize() {
+    clearTimeout(this.resizeTimeout);
+    this.resizeTimeout = setTimeout(() => {
+      if (this.chart && this.chart.canvas) {
+        this.chart.resize();
+      }
+    }, 100);
+  }
+
+  destroy() {
+    // Clean up resize observer
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+
+    // Clean up timeout
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+    }
+
+    // Clean up chart
+    if (this.chart) {
+      this.chart.destroy();
+      this.chart = null;
+    }
+
+    // Remove window resize listener if it was added
+    window.removeEventListener("resize", this.handleWindowResize.bind(this));
   }
 }

@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script>
+      // set theme on load
+      (function () {
+        const theme = localStorage.getItem("theme") || "dark"; // default theme
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audio Dashboard</title>
+    <script src="/static/styling/chart.js"></script>
+    <link href="/static/styling/output.css" rel="stylesheet" />
+    <script src="/static/styling/theme-change.js"></script>
+    <script type="module" src="/static/scripts/script.js"></script>
+  </head>
+  <body class="bg-gradient-to-br from-base-100 to-base-200 min-h-screen p-6">
+    <!-- Header Controls -->
+    <div class="fixed top-4 right-4 z-50 flex gap-2">
+      <!-- AP Config Button -->
+      <div class="drawer drawer-end">
+        <input id="ap-config-drawer" type="checkbox" class="drawer-toggle" />
+        <div class="drawer-content">
+          <label for="ap-config-drawer" class="btn btn-ghost btn-circle">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="size-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
+              />
+            </svg>
+          </label>
+        </div>
+        <div class="drawer-side">
+          <label
+            for="ap-config-drawer"
+            aria-label="close sidebar"
+            class="drawer-overlay"
+          ></label>
+          <div
+            class="menu bg-base-100 text-base-content min-h-full w-80 p-6 shadow-xl"
+          >
+            <!-- AP Configuration Panel -->
+            <div class="mb-4">
+              <h2 class="text-2xl font-bold mb-2 flex items-center gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-6 text-primary"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
+                  />
+                </svg>
+                <span
+                  class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+                >
+                  WiFi Config
+                </span>
+              </h2>
+              <p class="text-sm text-base-content/70 mb-6">
+                Configure Access Point settings
+              </p>
+            </div>
+
+            <!-- Current Status -->
+            <div class="card bg-base-200/50 border border-base-300/30 mb-6">
+              <div class="card-body p-4">
+                <h3 class="font-semibold text-sm mb-3">Current Status</h3>
+                <div class="space-y-3 text-xs">
+                  <div class="flex justify-between items-center">
+                    <span class="text-base-content/70">Mode:</span>
+                    <span class="badge badge-sm" id="current-wifi-mode">-</span>
+                  </div>
+
+                  <!-- Single mode display (hidden in dual mode) -->
+                  <div id="single-mode-info" class="space-y-2">
+                    <div class="flex justify-between items-center">
+                      <span class="text-base-content/70">SSID:</span>
+                      <span
+                        class="font-mono text-xs bg-base-300/30 px-2 py-1 rounded"
+                        id="current-ssid"
+                        >-</span
+                      >
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-base-content/70">IP Address:</span>
+                      <span
+                        class="font-mono text-xs bg-base-300/30 px-2 py-1 rounded"
+                        id="current-ip"
+                        >-</span
+                      >
+                    </div>
+                  </div>
+
+                  <!-- Dual mode display (shown only in dual mode) -->
+                  <div id="dual-mode-info" class="space-y-3 hidden">
+                    <div class="border-l-2 border-secondary pl-3">
+                      <div class="flex items-center gap-2 mb-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="1.5"
+                          stroke="currentColor"
+                          class="w-4 h-4 text-secondary"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
+                          />
+                        </svg>
+                        <span class="font-semibold text-secondary"
+                          >Access Point</span
+                        >
+                      </div>
+                      <div class="space-y-1 ml-6">
+                        <div class="flex justify-between">
+                          <span class="text-base-content/60">SSID:</span>
+                          <span
+                            class="font-mono text-xs bg-base-300/30 px-2 py-1 rounded"
+                            id="ap-ssid-display"
+                            >-</span
+                          >
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-base-content/60">IP:</span>
+                          <span
+                            class="font-mono text-xs bg-base-300/30 px-2 py-1 rounded"
+                            id="ap-ip"
+                            >-</span
+                          >
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="border-l-2 border-primary pl-3">
+                      <div class="flex items-center gap-2 mb-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="1.5"
+                          stroke="currentColor"
+                          class="w-4 h-4 text-primary"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9"
+                          />
+                        </svg>
+                        <span class="font-semibold text-primary">Station</span>
+                      </div>
+                      <div class="space-y-1 ml-6">
+                        <div class="flex justify-between">
+                          <span class="text-base-content/60">SSID:</span>
+                          <span
+                            class="font-mono text-xs bg-base-300/30 px-2 py-1 rounded"
+                            id="station-ssid-display"
+                            >-</span
+                          >
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-base-content/60">IP:</span>
+                          <span
+                            class="font-mono text-xs bg-base-300/30 px-2 py-1 rounded"
+                            id="station-ip"
+                            >-</span
+                          >
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Network Mode Selector -->
+            <div
+              class="collapse collapse-plus bg-base-100 border-base-300 border mb-6"
+            >
+              <input type="checkbox" />
+              <div class="collapse-title font-semibold flex items-center gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-5 text-info"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                Network Mode
+              </div>
+              <div class="collapse-content">
+                <div class="space-y-4">
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text text-xs"
+                        >Select Network Mode</span
+                      >
+                    </label>
+                    <select
+                      id="network-mode-select"
+                      class="select select-bordered select-sm w-full"
+                    >
+                      <option value="ap">Access Point Only</option>
+                      <option value="station">
+                        Station Only (Connect to WiFi)
+                      </option>
+                      <option value="dual">Dual Mode (AP + Station)</option>
+                    </select>
+                  </div>
+                  <div
+                    class="text-xs text-base-content/60 p-3 bg-base-200/50 rounded-lg border border-base-300/30"
+                  >
+                    <strong>AP Only:</strong> Creates hotspot only<br />
+                    <strong>Station Only:</strong> Connects to existing WiFi<br />
+                    <strong>Dual Mode:</strong> Both hotspot and WiFi
+                    connection<br />
+                    <br />
+                    <strong>⚠️ Note:</strong> Changing network mode requires a
+                    device restart to take effect.
+                  </div>
+                  <button
+                    id="apply-network-mode-btn"
+                    class="btn btn-info btn-sm w-full"
+                  >
+                    Apply Network Mode
+                  </button>
+                  <button
+                    id="restart-device-btn"
+                    class="btn btn-warning btn-sm w-full mt-2 hidden"
+                  >
+                    Restart Device Now
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Available Networks -->
+            <div
+              class="collapse collapse-plus bg-base-100 border-base-300 border mb-6"
+            >
+              <input type="checkbox" />
+              <div class="collapse-title font-semibold flex items-center gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-5 text-accent"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                  />
+                </svg>
+                Available Networks
+              </div>
+              <div class="collapse-content">
+                <button
+                  id="scan-networks-btn"
+                  class="btn btn-accent btn-outline btn-sm btn-block mb-3"
+                >
+                  Scan for Networks
+                </button>
+                <div
+                  id="network-list"
+                  class="space-y-1 max-h-40 overflow-y-auto"
+                >
+                  <div class="text-xs text-base-content/60 text-center py-2">
+                    Click scan to find available networks
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Station Mode Config -->
+            <div
+              class="collapse collapse-plus bg-base-100 border-base-300 border mb-4"
+            >
+              <input type="checkbox" />
+              <div class="collapse-title font-semibold flex items-center gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-5 text-primary"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9"
+                  />
+                </svg>
+                WiFi Network Configuration
+              </div>
+              <div class="collapse-content">
+                <div class="space-y-4">
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text text-xs">WiFi Network SSID</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="station-ssid"
+                      placeholder="Enter WiFi network name"
+                      class="input input-bordered input-sm w-full"
+                    />
+                  </div>
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text text-xs">Password</span>
+                    </label>
+                    <input
+                      type="password"
+                      id="station-password"
+                      placeholder="Enter WiFi password"
+                      class="input input-bordered input-sm w-full"
+                    />
+                  </div>
+                  <button
+                    id="save-station-config-btn"
+                    class="btn btn-primary btn-sm w-full"
+                  >
+                    Save WiFi Configuration
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- AP Mode Config -->
+            <div
+              class="collapse collapse-plus bg-base-100 border-base-300 border mb-4"
+            >
+              <input type="checkbox" />
+              <div class="collapse-title font-semibold flex items-center gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-5 text-secondary"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
+                  />
+                </svg>
+                Access Point Configuration
+              </div>
+              <div class="collapse-content">
+                <div class="space-y-4">
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text text-xs">AP Name (SSID)</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="ap-ssid"
+                      required
+                      placeholder="SSID"
+                      minlength="1"
+                      class="input validator input-bordered input-sm w-full"
+                    />
+                  </div>
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text text-xs"
+                        >AP Password (min 8 chars)</span
+                      >
+                    </label>
+                    <input
+                      type="password"
+                      id="ap-password"
+                      required
+                      placeholder="Password"
+                      minlength="8"
+                      class="input validator input-bordered input-sm w-full"
+                    />
+                  </div>
+                  <div class="validator-hint">Enter a password</div>
+                  <button
+                    id="save-ap-config-btn"
+                    class="btn btn-secondary btn-sm w-full"
+                  >
+                    Save Access Point Configuration
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme Selector -->
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"
+            />
+          </svg>
+        </div>
+        <ul
+          tabindex="0"
+          class="dropdown-content bg-base-200 rounded-box z-[1] w-48 p-2 shadow-xl border border-base-300"
+        >
+          <li>
+            <button
+              class="theme-controller btn btn-sm btn-block btn-ghost justify-start"
+              data-set-theme="light"
+              data-act-class="ACTIVECLASS"
+            >
+              🌞 Light
+            </button>
+          </li>
+          <li>
+            <button
+              class="theme-controller btn btn-sm btn-block btn-ghost justify-start"
+              data-set-theme="emerald"
+              data-act-class="ACTIVECLASS"
+            >
+              ❇️ Emerald
+            </button>
+          </li>
+          <li>
+            <button
+              class="theme-controller btn btn-sm btn-block btn-ghost justify-start"
+              data-set-theme="dark"
+              data-act-class="ACTIVECLASS"
+            >
+              🌙 Dark
+            </button>
+          </li>
+          <li>
+            <button
+              class="theme-controller btn btn-sm btn-block btn-ghost justify-start"
+              data-set-theme="forest"
+              data-act-class="ACTIVECLASS"
+            >
+              🌲Forest
+            </button>
+          </li>
+          <li>
+            <button
+              class="theme-controller btn btn-sm btn-block btn-ghost justify-start"
+              data-set-theme="night"
+              data-act-class="ACTIVECLASS"
+            >
+              🌌 Night
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Main Dashboard Content -->
+    <div class="container mx-auto max-w-6xl">
+      <!-- Dashboard Header -->
+      <div class="text-center mb-8">
+        <h1
+          class="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-2"
+        >
+          Dashboard
+        </h1>
+      </div>
+
+      <!-- Main Control Grid -->
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <!-- EQ Control Panel -->
+        <div
+          class="card bg-base-100/80 backdrop-blur-sm shadow-2xl border border-base-300/50"
+        >
+          <div class="card-body">
+            <h2 class="card-title text-2xl mb-6">
+              <div
+                class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6 13.5V3.75m0 9.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 3.75V16.5m12-3V3.75m0 9.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 3.75V16.5m-6-9V3.75m0 3.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 9.75V10.5"
+                  />
+                </svg>
+              </div>
+              <span
+                class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+              >
+                Equalizer
+              </span>
+            </h2>
+
+            <!-- EQ Chart -->
+            <div
+              class="mb-6 p-4 bg-base-200/50 rounded-xl border border-base-300/30"
+            >
+              <div class="relative w-full h-48">
+                <canvas id="eqChart" class="w-full h-full"></canvas>
+              </div>
+            </div>
+
+            <!-- EQ Values Display -->
+            <div class="grid grid-cols-3 gap-4 mb-6">
+              <div
+                class="text-center p-3 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20"
+              >
+                <div class="text-xs text-primary font-semibold">LOW (80Hz)</div>
+                <div class="text-lg font-mono" id="lowValue">0.0dB</div>
+              </div>
+              <div
+                class="text-center p-3 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-lg border border-secondary/20"
+              >
+                <div class="text-xs text-secondary font-semibold">
+                  MID (1kHz)
+                </div>
+                <div class="text-lg font-mono" id="midValue">0.0dB</div>
+              </div>
+              <div
+                class="text-center p-3 bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg border border-accent/20"
+              >
+                <div class="text-xs text-accent font-semibold">HIGH (8kHz)</div>
+                <div class="text-lg font-mono" id="highValue">0.0dB</div>
+              </div>
+            </div>
+
+            <!-- EQ Controls -->
+            <div class="space-y-6">
+              <div class="form-control">
+                <div class="flex items-center justify-between mb-2">
+                  <label
+                    class="label-text font-semibold flex items-center gap-2"
+                  >
+                    <div class="w-3 h-3 rounded-full bg-primary"></div>
+                    Low Frequency
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <span class="badge badge-sm" id="lowControlStatus"
+                      >Physical</span
+                    >
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  id="lowSlider"
+                  name="low"
+                  min="-12"
+                  max="12"
+                  value="0"
+                  step="0.1"
+                  class="range range-primary w-full"
+                />
+                <div
+                  class="w-full flex justify-between text-xs px-2 mt-1 text-base-content/60"
+                >
+                  <span>-12dB</span>
+                  <span>-6dB</span>
+                  <span>0dB</span>
+                  <span>+6dB</span>
+                  <span>+12dB</span>
+                </div>
+              </div>
+
+              <div class="form-control">
+                <div class="flex items-center justify-between mb-2">
+                  <label
+                    class="label-text font-semibold flex items-center gap-2"
+                  >
+                    <div class="w-3 h-3 rounded-full bg-secondary"></div>
+                    Mid Frequency
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <span class="badge badge-sm" id="midControlStatus"
+                      >Physical</span
+                    >
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  id="midSlider"
+                  name="mid"
+                  min="-12"
+                  max="12"
+                  value="0"
+                  step="0.1"
+                  class="range range-secondary w-full"
+                />
+                <div
+                  class="w-full flex justify-between text-xs px-2 mt-1 text-base-content/60"
+                >
+                  <span>-12dB</span>
+                  <span>-6dB</span>
+                  <span>0dB</span>
+                  <span>+6dB</span>
+                  <span>+12dB</span>
+                </div>
+              </div>
+
+              <div class="form-control">
+                <div class="flex items-center justify-between mb-2">
+                  <label
+                    class="label-text font-semibold flex items-center gap-2"
+                  >
+                    <div class="w-3 h-3 rounded-full bg-accent"></div>
+                    High Frequency
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <span class="badge badge-sm" id="highControlStatus"
+                      >Physical</span
+                    >
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  id="highSlider"
+                  name="high"
+                  min="-12"
+                  max="12"
+                  value="0"
+                  step="0.1"
+                  class="range range-accent w-full"
+                />
+                <div
+                  class="w-full flex justify-between text-xs px-2 mt-1 text-base-content/60"
+                >
+                  <span>-12dB</span>
+                  <span>-6dB</span>
+                  <span>0dB</span>
+                  <span>+6dB</span>
+                  <span>+12dB</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audio Features Panel -->
+        <div
+          class="card bg-base-100/80 backdrop-blur-sm shadow-2xl border border-base-300/50"
+        >
+          <div class="card-body">
+            <h2 class="card-title text-2xl mb-6">
+              <div
+                class="w-10 h-10 rounded-lg bg-gradient-to-br from-secondary to-accent flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m9 9 10.5-3m0 6.553v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 1 1-.99-3.467l2.31-.66a2.25 2.25 0 0 0 1.632-2.163Zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 0 1-.99-3.467l2.31-.66A2.25 2.25 0 0 0 9 15.553Z"
+                  />
+                </svg>
+              </div>
+              <span
+                class="bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent"
+              >
+                Audio Features
+              </span>
+            </h2>
+
+            <!-- Voice Mode Control -->
+            <div class="form-control mb-6">
+              <div
+                class="card bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20"
+              >
+                <div class="card-body p-4">
+                  <div class="flex items-center gap-3 mb-3">
+                    <svg
+                      class="w-6 h-6 text-primary"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"
+                      />
+                    </svg>
+                    <div>
+                      <h3 class="font-semibold">Voice Mode</h3>
+                      <p class="text-xs text-base-content/70">Audio Presets</p>
+                    </div>
+                  </div>
+                  <button
+                    id="toggleVoiceModeBtn"
+                    type="button"
+                    class="btn btn-primary btn-block btn-outline"
+                  >
+                    Toggle Voice Mode
+                  </button>
+                  <div class="mt-2 text-center">
+                    <div class="badge badge-ghost">
+                      <span id="currentMode" class="text-sm capitalize"
+                        >Current Mode: off</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Audio Processing Controls -->
+            <div class="space-y-4">
+              <div class="form-control">
+                <div
+                  class="card bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20"
+                >
+                  <div class="card-body p-4">
+                    <div class="flex items-center gap-3 mb-3">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="size-6 text-secondary"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
+                        />
+                      </svg>
+
+                      <div>
+                        <h4 class="font-medium">Music Ducking</h4>
+                        <p class="text-xs text-base-content/70">
+                          Auto-adjust music levels
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      class="btn btn-secondary btn-outline btn-block"
+                      hx-post="/trigger-ducking"
+                      hx-target="#musicDucking"
+                      hx-swap="innerHTML"
+                    >
+                      Toggle Ducking
+                    </button>
+                    <div class="mt-2 text-center">
+                      <span class="badge badge-ghost" id="musicDucking"
+                        >Ducking: off</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-control">
+                <div
+                  class="card bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20"
+                >
+                  <div class="card-body p-4">
+                    <div class="flex items-center gap-3 mb-3">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="size-6 text-accent"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"
+                        />
+                      </svg>
+
+                      <div>
+                        <h4 class="font-medium">Audio Feedback</h4>
+                        <p class="text-xs text-base-content/70">
+                          Feedback suppression
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      class="btn btn-accent btn-outline btn-block"
+                      hx-post="/trigger-feedback"
+                      hx-target="#feedback"
+                      hx-swap="innerHTML"
+                    >
+                      Toggle Feedback Control
+                    </button>
+                    <div class="mt-2 text-center">
+                      <span class="badge badge-ghost" id="feedback"
+                        >Feedback: off</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .theme-controller.ACTIVECLASS {
+        background-color: hsl(var(--p));
+        color: hsl(var(--pc));
+      }
+    </style>
+    <script>
+      //  theme persistence
+      document.addEventListener("DOMContentLoaded", function () {
+        if (!localStorage.getItem("theme")) {
+          document.documentElement.setAttribute("data-theme", "dark");
+          localStorage.setItem("theme", "dark");
+        }
+      });
+    </script>
+  </body>
+</html>

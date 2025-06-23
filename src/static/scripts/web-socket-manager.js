@@ -22,7 +22,7 @@ export default class WebSocketManager {
 
   setupEventHandlers() {
     this.socket.onopen = () => {
-      console.log("WebSocket connected");
+      // console.log("WebSocket connected");
       this.reconnectAttempts = 0;
       this.callbacks.onOpen?.();
     };
@@ -37,7 +37,7 @@ export default class WebSocketManager {
     };
 
     this.socket.onclose = () => {
-      console.log("WebSocket disconnected");
+      // console.log("WebSocket disconnected");
       this.callbacks.onClose?.();
       this.handleReconnect();
     };
@@ -49,7 +49,7 @@ export default class WebSocketManager {
   }
 
   handleMessage(message) {
-    console.log("WebSocket message received:", message);
+    // console.log("WebSocket message received:", message);
     const handler = this.callbacks[message.type];
     if (handler) {
       handler(message);
@@ -62,7 +62,7 @@ export default class WebSocketManager {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       setTimeout(() => {
-        console.log(`Reconnection attempt ${this.reconnectAttempts}`);
+        // console.log(`Reconnection attempt ${this.reconnectAttempts}`);
         this.connect();
       }, this.reconnectDelay * this.reconnectAttempts);
     }

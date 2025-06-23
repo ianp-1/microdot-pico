@@ -1,0 +1,13 @@
+@import "tailwindcss";
+@source "templates/dashboard.html";
+@plugin "./daisyui.js" {
+  themes: light --default, dark --prefersdark, forest, night, emerald;
+}
+
+/* Optional for custom themes – Docs: https://daisyui.com/docs/themes/#how-to-add-a-new-custom-theme */
+@plugin "./daisyui-theme.js" {
+}
+
+.theme-controller.ACTIVECLASS {
+  @apply btn-primary text-primary-content;
+}

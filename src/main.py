@@ -1,21 +1,25 @@
+import _thread
+from model.sine_play_i2s import audio_task
 from lib.microdot import Microdot, send_file
 from lib.microdot.websocket import with_websocket
 import uasyncio as asyncio
 import machine
 from model.model import AudioModel
 from model.wifi_manager import WiFiManager
-
-# Import everything needed from the app package
 from app import (
     WebSocketHandler, WiFiRoutes, AudioRoutes,
     SERVER_PORT, main_logger
 )
 
+# === Start DSP on Core 1 ===
+_thread.start_new_thread(audio_task, ())
+
+# === App setup ===
 app = Microdot()
 model = AudioModel()
 wifi_manager = WiFiManager()
 
-# Initialize handlers
+# === Route handlers ===
 ws_handler = WebSocketHandler(model)
 wifi_routes = WiFiRoutes(wifi_manager)
 audio_routes = AudioRoutes(model)
@@ -31,7 +35,7 @@ def static_files(request, path):
     """Serve static files with security checks"""
     if '..' in path:
         return 'Forbidden', 403
-    return send_file(f'static/{path}', compressed=True, file_extension='.gz')
+    return send_file(f'static/{path}', compressed=True, file_extension='.gz',max_age=31536000)
 
 # API routes - delegate to AudioRoutes class
 @app.post('/toggle-voice-mode')
@@ -126,9 +130,8 @@ def wifi_save_station_config(request):
 def wifi_save_ap_config(request):
     return wifi_routes.save_ap_config(request)
 
-# Application lifecycle functions
+# === Async setup ===
 async def setup_network():
-    """Setup network using WiFi manager"""
     main_logger.info("Setting up network...")
     try:
         result = await wifi_manager.setup_network()
@@ -138,7 +141,6 @@ async def setup_network():
         return False
 
 async def setup_background_tasks():
-    """Setup background tasks after network is ready"""
     main_logger.info("Starting background tasks...")
     try:
         asyncio.create_task(model.monitor_dials_loop())
@@ -146,25 +148,14 @@ async def setup_background_tasks():
     except Exception as e:
         main_logger.exception("Background tasks error", e)
 
-async def main():
-    """Main application entry point"""
-    main_logger.info(f"Starting Audio Dashboard on port {SERVER_PORT}...")
-    
-    # Start network setup in background - don't wait for it
-    network_task = asyncio.create_task(setup_network())
-    
-    # Start background tasks regardless of network status
-    background_task = asyncio.create_task(setup_background_tasks())
-    
-    # Start server immediately
-    try:
-        await app.start_server(port=SERVER_PORT)
-    except Exception as e:
-        main_logger.exception("Server error", e)
-        raise
 
-# Application entry point
-if __name__ == '__main__':
+async def main():
+    main_logger.info(f"Starting Audio Dashboard on port {SERVER_PORT}...")
+    asyncio.create_task(setup_network())
+    asyncio.create_task(setup_background_tasks())
+    await app.start_server(port=SERVER_PORT)
+
+if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:

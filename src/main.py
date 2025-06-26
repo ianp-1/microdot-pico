@@ -1,5 +1,6 @@
 import _thread
 from dsp.sine_play_i2s import audio_task
+from dsp.dsp_state import set_param
 from lib.microdot import Microdot, send_file
 from lib.microdot.websocket import with_websocket
 import uasyncio as asyncio
@@ -129,6 +130,17 @@ def wifi_save_station_config(request):
 @app.post('/wifi/save-ap-config')
 def wifi_save_ap_config(request):
     return wifi_routes.save_ap_config(request)
+
+# === DSP routes ===
+@app.post('/mute')
+def mute(request):
+    set_param('mute', True)
+    return {'status': 'muted'}
+
+@app.post('/unmute')
+def unmute(request):
+    set_param('mute', False)
+    return {'status': 'unmuted'}
 
 # === Async setup ===
 async def setup_network():

@@ -1,7 +1,7 @@
-import sys, os, time
-import machine
+import machine, time
 from machine import I2S
 from machine import Pin
+from dsp.dsp_state import get_param
 
 # ======= I2S CONFIGURATION =======
 SCK_PIN = 18		# BCLK
@@ -69,6 +69,15 @@ def audio_task():
             else:
                 buf_mv = memoryview(buf_0)
             _ = audio_out.write(buf_mv[:(len(seq_1) * 4)])
+
+            # Check volume and mute state
+            volume = get_param('volume')
+            mute = get_param('mute')
+            if mute:
+                machine.Pin(SCK_PIN, Pin.OUT).value(0)
+            else:
+                pass
+            
             machine.idle()
             
 

@@ -19,6 +19,7 @@ cp -r "$TEMPLATES_SRC/"* "$TEMPLATES_BUILD/"
 cp -r "$SRC_DIR/lib" "$BUILD_DIR/"
 cp -r "$SRC_DIR/model" "$BUILD_DIR/"
 cp -r "$SRC_DIR/app" "$BUILD_DIR/"
+cp -r "$SRC_DIR/dsp" "$BUILD_DIR/"
 cp "$SRC_DIR/main.py" "$BUILD_DIR/"  # Entry point for MicroPython
 cp "$SRC_DIR/wifi_config.json" "$BUILD_DIR/"
 

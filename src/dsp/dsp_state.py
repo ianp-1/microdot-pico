@@ -1,5 +1,7 @@
 import _thread
 
+# Core 0 to Core 1 (DSP) communication
+
 dsp_params = {
     'volume': 100,
     'mute': False,

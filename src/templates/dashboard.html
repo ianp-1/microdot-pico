@@ -715,6 +715,86 @@
               </span>
             </h2>
 
+            <!-- Mute Toggle Control -->
+            <div class="form-control mb-6">
+              <div
+                class="card bg-gradient-to-br from-error/5 to-error/10 border border-error/20"
+              >
+                <div class="card-body p-4">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="size-6 text-error"
+                        id="muteIcon"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.5c-.69 0-1.25-.56-1.25-1.25V9.75c0-.69.56-1.25 1.25-1.25H6.75z"
+                        />
+                      </svg>
+                      <div>
+                        <h3 class="font-semibold">Master Audio</h3>
+                        <p class="text-xs text-base-content/70">
+                          Volume Control
+                        </p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span class="text-sm text-base-content/70" id="muteStatus"
+                        >Unmuted</span
+                      >
+                      <input
+                        type="checkbox"
+                        id="muteToggle"
+                        class="toggle toggle-error"
+                        aria-label="Mute toggle"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Volume Level Indicator -->
+                  <div class="flex items-center gap-3 mt-4">
+                    <progress
+                      class="progress progress-error w-full"
+                      value="70"
+                      max="100"
+                      id="volumeProgress"
+                    ></progress>
+                    <span
+                      class="text-sm font-mono text-base-content/70 min-w-[3rem]"
+                      id="volumeLevel"
+                      >70%</span
+                    >
+                  </div>
+
+                  <!-- Mute Status Alert -->
+                  <div class="alert alert-warning mt-3 hidden" id="muteAlert">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="1.5"
+                      stroke="currentColor"
+                      class="size-6"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                    <span>Audio is currently muted</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Voice Mode Control -->
             <div class="form-control mb-6">
               <div
@@ -863,6 +943,103 @@
         if (!localStorage.getItem("theme")) {
           document.documentElement.setAttribute("data-theme", "dark");
           localStorage.setItem("theme", "dark");
+        }
+      });
+
+      // Mute Toggle Functionality
+      document.addEventListener("DOMContentLoaded", function () {
+        const muteToggle = document.getElementById("muteToggle");
+        const muteStatus = document.getElementById("muteStatus");
+        const muteAlert = document.getElementById("muteAlert");
+        const muteIcon = document.getElementById("muteIcon");
+        const volumeProgress = document.getElementById("volumeProgress");
+        const volumeLevel = document.getElementById("volumeLevel");
+
+        // Muted icon SVG
+        const mutedIconPath = `
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.5c-.69 0-1.25-.56-1.25-1.25V9.75c0-.69.56-1.25 1.25-1.25H6.75z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12L21 16.5m0-9L16.5 12"/>
+        `;
+
+        // Unmuted icon SVG
+        const unmutedIconPath = `
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.5c-.69 0-1.25-.56-1.25-1.25V9.75c0-.69.56-1.25 1.25-1.25H6.75z"/>
+        `;
+
+        // Initialize with audio dashboard app if available
+        let dashboardApp = null;
+        if (window.audioApp) {
+          dashboardApp = window.audioApp;
+
+          // Add mute message handler to WebSocket callbacks
+          if (dashboardApp.wsManager) {
+            // Add mute callback to existing callbacks
+            dashboardApp.wsManager.callbacks.mute = (message) => {
+              updateMuteUI(message.enabled);
+              muteToggle.checked = message.enabled;
+              localStorage.setItem("audioMuted", message.enabled.toString());
+            };
+
+            // Extend initial_state callback to handle mute
+            const originalInitialHandler =
+              dashboardApp.wsManager.callbacks.initial_state;
+            dashboardApp.wsManager.callbacks.initial_state = (message) => {
+              if (originalInitialHandler) originalInitialHandler(message);
+              if (message.mute !== undefined) {
+                updateMuteUI(message.mute);
+                muteToggle.checked = message.mute;
+                localStorage.setItem("audioMuted", message.mute.toString());
+              }
+            };
+          }
+        } else {
+          // Load mute state from localStorage if no WebSocket available yet
+          const savedMuteState = localStorage.getItem("audioMuted") === "true";
+          muteToggle.checked = savedMuteState;
+          updateMuteUI(savedMuteState);
+        }
+
+        // Handle mute toggle - WebSocket only
+        muteToggle.addEventListener("change", function () {
+          const isMuted = this.checked;
+          updateMuteUI(isMuted);
+          localStorage.setItem("audioMuted", isMuted.toString());
+
+          // Send via WebSocket only
+          if (
+            dashboardApp &&
+            dashboardApp.wsManager &&
+            dashboardApp.wsManager.socket?.readyState === WebSocket.OPEN
+          ) {
+            dashboardApp.wsManager.send({
+              type: "toggle_mute",
+              data: { enabled: isMuted },
+            });
+          } else {
+            console.warn("WebSocket not connected - mute toggle unavailable");
+            // Revert toggle if WebSocket not available
+            muteToggle.checked = !isMuted;
+            updateMuteUI(!isMuted);
+            localStorage.setItem("audioMuted", (!isMuted).toString());
+          }
+        });
+
+        function updateMuteUI(isMuted) {
+          if (isMuted) {
+            muteStatus.textContent = "Muted";
+            muteStatus.className = "text-sm text-error font-semibold";
+            muteAlert.classList.remove("hidden");
+            muteIcon.innerHTML = mutedIconPath;
+            volumeProgress.classList.add("opacity-50");
+            volumeLevel.classList.add("opacity-50");
+          } else {
+            muteStatus.textContent = "Unmuted";
+            muteStatus.className = "text-sm text-base-content/70";
+            muteAlert.classList.add("hidden");
+            muteIcon.innerHTML = unmutedIconPath;
+            volumeProgress.classList.remove("opacity-50");
+            volumeLevel.classList.remove("opacity-50");
+          }
         }
       });
     </script>

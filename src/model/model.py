@@ -37,6 +37,9 @@ class AudioModel:
         self.voice_mode_manager.add_ducking_callback(self.ws_manager.broadcast_ducking_change)
         self.voice_mode_manager.add_feedback_callback(self.ws_manager.broadcast_feedback_change)
         
+        # Mute changes notify WebSocket clients
+        self.voice_mode_manager.add_mute_callback(self.ws_manager.broadcast_mute_change)
+        
         # EQ changes notify WebSocket clients
         self.eq_processor.add_update_callback(self.ws_manager.broadcast_eq_update)
     

@@ -16,6 +16,7 @@ class WebSocketHandler:
             WS_MESSAGES['EQ_UPDATE']: self._handle_eq_update,
             WS_MESSAGES['DUCKING_TOGGLE']: self._handle_ducking_toggle,
             WS_MESSAGES['FEEDBACK_TOGGLE']: self._handle_feedback_toggle,
+            WS_MESSAGES['MUTE_TOGGLE']: self._handle_mute_toggle,
             WS_MESSAGES['GET_STATE']: self._handle_get_state,
         }
     
@@ -33,11 +34,14 @@ class WebSocketHandler:
     
     async def _send_initial_state(self, ws):
         """Send initial state to newly connected client"""
+        from dsp.dsp_state import get_param
+        
         initial_state = {
             'type': WS_MESSAGES['INITIAL_STATE'],
             'mode': self.model.voice_mode_manager.current_mode,
             'feedback': self.model.voice_mode_manager.feedback_enabled,
             'ducking': self.model.voice_mode_manager.ducking_enabled,
+            'mute': get_param('mute'),
             'eq': self._get_eq_state()
         }
         await ws.send(json.dumps(initial_state))
@@ -104,6 +108,11 @@ class WebSocketHandler:
         """Handle feedback toggle"""
         new_state = self.model.voice_mode_manager.toggle_feedback()
         self.logger.info(f"Feedback toggled to: {new_state}")
+    
+    async def _handle_mute_toggle(self, ws, data):
+        """Handle mute toggle"""
+        new_state = self.model.voice_mode_manager.toggle_mute()
+        self.logger.info(f"Mute toggled to: {new_state}")
     
     async def _handle_get_state(self, ws, data):
         """Handle get current state request"""

@@ -10,6 +10,9 @@ class VoiceModeManager:
         self.feedback_enabled = False
         self.ducking_callbacks = []
         self.feedback_callbacks = []
+        
+        # Add mute state
+        self.mute_callbacks = []
     
     def add_change_callback(self, callback):
         self.change_callbacks.append(callback)
@@ -19,6 +22,9 @@ class VoiceModeManager:
     
     def add_feedback_callback(self, callback):
         self.feedback_callbacks.append(callback)
+    
+    def add_mute_callback(self, callback):
+        self.mute_callbacks.append(callback)
     
     def toggle_mode(self):
         self.current_mode_index = (self.current_mode_index + 1) % len(self.voice_modes)
@@ -50,3 +56,19 @@ class VoiceModeManager:
             callback(self.feedback_enabled)
         
         return self.feedback_enabled
+    
+    def toggle_mute(self):
+        from dsp.dsp_state import get_param, set_param
+        
+        # Toggle mute state in DSP
+        current_mute = get_param('mute')
+        new_mute = not current_mute
+        set_param('mute', new_mute)
+        
+        print(f"[MUTE] Mute toggled to: {new_mute}")
+        
+        # Notify all callbacks
+        for callback in self.mute_callbacks:
+            callback(new_mute)
+        
+        return new_mute

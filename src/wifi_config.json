@@ -1,5 +1,5 @@
 {
   "ap": { "ssid": "PicoW-Audio", "password": "picowifi" },
   "station": { "ssid": "SUGA Guest 5G", "password": "suga22wifi" },
-  "mode": "dual"
+  "mode": "station"
 }

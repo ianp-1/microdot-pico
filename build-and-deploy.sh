@@ -23,7 +23,25 @@ cp -r "$SRC_DIR/dsp" "$BUILD_DIR/"
 cp "$SRC_DIR/main.py" "$BUILD_DIR/"  # Entry point for MicroPython
 cp "$SRC_DIR/wifi_config.json" "$BUILD_DIR/"
 
-# Step 2: Copy and use tailwind binary
+# Step 2: Compile Python files to .mpy format
+echo "🐍 Compiling Python files to .mpy format..."
+find "$BUILD_DIR" -type f -name '*.py' | while read -r py_file; do
+  # Skip main.py as it needs to remain as .py (entry point)
+  if [[ "$(basename "$py_file")" != "main.py" ]]; then
+    mpy_file="${py_file%.py}.mpy"
+    echo "  Compiling $(basename "$py_file") to $(basename "$mpy_file")"
+    
+    # Compile to .mpy using mpy-cross
+    if mpy-cross "$py_file" -o "$mpy_file"; then
+      # Remove original .py file after successful compilation
+      rm "$py_file"
+    else
+      echo "  ⚠️ Failed to compile $py_file, keeping original"
+    fi
+  fi
+done
+
+# Step 3: Copy and use tailwind binary
 cp "$TAILWIND_SRC" "$TAILWIND_BIN"
 chmod +x "$TAILWIND_BIN"
 
@@ -31,7 +49,7 @@ echo "🎨 Building CSS..."
 "$TAILWIND_BIN" -i "$STATIC_BUILD/styling/input.css" -o "$STATIC_BUILD/styling/output.css" --minify
 rm -f "$TAILWIND_BIN"
 
-# Step 3: Minify and compress all JS files in static/ and static/scripts/
+# Step 4: Minify and compress all JS files in static/ and static/scripts/
 echo "📦 Minifying and compressing JS..."
 find "$STATIC_BUILD" -type f -name '*.js' | while read -r js; do
   min="${js%.js}.min.js"
@@ -49,12 +67,12 @@ find "$STATIC_BUILD" -type f -name '*.js' | while read -r js; do
   rm -f "$js" "$min"
 done
 
-# Step 4: Compress CSS with gzip
+# Step 5: Compress CSS with gzip
 echo "🗜️ Compressing CSS..."
 gzip -f "$STATIC_BUILD/styling/output.css"
 rm -f "$STATIC_BUILD/styling/output.css" "$STATIC_BUILD/styling/input.css"
 
-# Step 5: Minify + compress HTML
+# Step 6: Minify + compress HTML
 echo "📄 Minifying and compressing HTML..."
 for html in "$TEMPLATES_BUILD/"*.html; do
   min="${html%.html}.min.html"
@@ -77,7 +95,7 @@ for html in "$TEMPLATES_BUILD/"*.html; do
   rm -f "$html"
 done
 
-# Step 6: Upload to Pico W
+# Step 7: Upload to Pico W
 echo "📡 Uploading entire build/ to Pico W..."
 mpremote connect tty.usbmodem* fs cp -r "$BUILD_DIR" :
 

@@ -57,15 +57,22 @@ class VoiceModeManager:
         
         return self.feedback_enabled
     
+    def get_mute_status(self):
+        from dsp.dsp_state import get_param
+        current_mute = get_param('mute')
+        return current_mute if current_mute is not None else False
+
     def toggle_mute(self):
         from dsp.dsp_state import get_param, set_param
         
         # Toggle mute state in DSP
         current_mute = get_param('mute')
+        if current_mute is None:
+            current_mute = False  # Default to unmuted if not set
         new_mute = not current_mute
         set_param('mute', new_mute)
         
-        print(f"[MUTE] Mute toggled to: {new_mute}")
+        print(f"[MUTE] Mute toggled from {current_mute} to: {new_mute}")
         
         # Notify all callbacks
         for callback in self.mute_callbacks:

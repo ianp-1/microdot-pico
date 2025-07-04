@@ -22,6 +22,7 @@ export default class AudioDashboardApp {
       mode: (message) => this.handleModeUpdate(message),
       ducking: (message) => this.handleDuckingUpdate(message),
       feedback: (message) => this.handleFeedbackUpdate(message),
+      mute: (message) => this.handleMuteUpdate(message),
       initial_state: (message) => this.handleInitialState(message),
       onOpen: () => {
         // console.log("Dashboard WebSocket connected");
@@ -43,6 +44,7 @@ export default class AudioDashboardApp {
     // Connect toggle button to mode manager
     this.setupModeToggleButton();
     this.setupDuckingFeedbackButtons();
+    this.setupMuteButton();
 
     // console.log("Audio Dashboard initialized");
   }
@@ -73,6 +75,12 @@ export default class AudioDashboardApp {
     if (message.feedback !== undefined) {
       // console.log("Setting feedback to:", message.feedback);
       this.updateFeedbackDisplay(message.feedback);
+    }
+
+    // Update mute state
+    if (message.mute !== undefined) {
+      // console.log("Setting mute to:", message.mute);
+      this.updateMuteDisplay(message.mute);
     }
   }
 
@@ -114,6 +122,11 @@ export default class AudioDashboardApp {
     this.updateFeedbackDisplay(message.enabled);
   }
 
+  handleMuteUpdate(message) {
+    // console.log("Handling mute update:", message);
+    this.updateMuteDisplay(message.enabled);
+  }
+
   updateDuckingDisplay(enabled) {
     const duckingDisplay = document.getElementById("musicDucking");
     if (duckingDisplay) {
@@ -131,6 +144,24 @@ export default class AudioDashboardApp {
       feedbackDisplay.className = `mt-2 capitalize ${
         enabled ? "text-emerald-400" : "text-gray-400"
       }`;
+    }
+  }
+
+  updateMuteDisplay(enabled) {
+    const muteButton = document.getElementById("muteButton");
+    const muteStatus = document.getElementById("muteStatus");
+    const muteAlert = document.getElementById("muteAlert");
+
+    if (muteStatus) {
+      muteStatus.textContent = enabled ? "on" : "off";
+    }
+
+    if (muteAlert) {
+      if (enabled) {
+        muteAlert.classList.remove("hidden");
+      } else {
+        muteAlert.classList.add("hidden");
+      }
     }
   }
 
@@ -178,6 +209,18 @@ export default class AudioDashboardApp {
         this.modeManager.toggleFeedback();
       });
     });
+  }
+
+  setupMuteButton() {
+    const muteButton = document.getElementById("muteButton");
+    if (muteButton) {
+      muteButton.addEventListener("click", () => {
+        // console.log("Mute button clicked");
+        this.modeManager.toggleMute();
+      });
+    } else {
+      console.error("Mute button not found!");
+    }
   }
 
   destroy() {

@@ -43,6 +43,16 @@ class AudioRoutes:
             self.logger.exception("Feedback toggle failed", e)
             return "Error: Failed to toggle feedback"
     
+    def toggle_mute(self, request):
+        """Toggle mute and return updated state"""
+        try:
+            muted = self.model.voice_mode_manager.toggle_mute()
+            self.logger.info(f"Mute toggled to: {'muted' if muted else 'unmuted'}")
+            return f'<span id="muteStatus">{"muted" if muted else "unmuted"}</span>'
+        except Exception as e:
+            self.logger.exception("Mute toggle failed", e)
+            return "Error: Failed to toggle mute"
+    
     def get_current_state_json(self, request):
         """Return current system state as JSON"""
         try:
@@ -50,6 +60,7 @@ class AudioRoutes:
                 'mode': self.model.voice_mode_manager.current_mode,
                 'ducking': self.model.voice_mode_manager.ducking_enabled,
                 'feedback': self.model.voice_mode_manager.feedback_enabled,
+                'muted': self.model.voice_mode_manager.get_mute_status(),
                 'eq': self._get_eq_state()
             }
         except Exception as e:
@@ -124,6 +135,7 @@ class AudioRoutes:
                     'total': free_mem + allocated_mem
                 },
                 'voice_mode': self.model.voice_mode_manager.current_mode,
+                'muted': self.model.voice_mode_manager.get_mute_status(),
                 'eq_state': self._get_eq_state()
             })
         except Exception as e:

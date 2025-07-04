@@ -71,10 +71,23 @@ def audio_task():
     print("========== START PLAYBACK ==========")
 
     try:
+        last_mute = None
+        last_volume = None
         while True:
             # Read parameters
             volume = get_param("volume")
             mute = get_param("mute")
+            # Defensive: treat None as unmuted, full volume
+            if mute is None:
+                mute = False
+            if volume is None:
+                volume = 100
+
+            # Debug: print only on change
+            if mute != last_mute or volume != last_volume:
+                print(f"[DSP] mute={mute} volume={volume}")
+                last_mute = mute
+                last_volume = volume
 
             # Play silence if muted
             if mute or volume == 0:

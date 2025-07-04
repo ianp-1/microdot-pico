@@ -42,6 +42,12 @@ export default class ModeManager {
     });
   }
 
+  toggleMute() {
+    this.wsManager.send({
+      action: "toggle_mute",
+    });
+  }
+
   setOnModeChangeCallback(callback) {
     this.onModeChangeCallback = callback;
   }

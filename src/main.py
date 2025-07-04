@@ -36,7 +36,7 @@ def static_files(request, path):
     """Serve static files with security checks"""
     if '..' in path:
         return 'Forbidden', 403
-    return send_file(f'static/{path}', compressed=True, file_extension='.gz',max_age=31536000)
+    return send_file(f'static/{path}', compressed=True, file_extension='.gz')
 
 # API routes - delegate to AudioRoutes class
 @app.post('/toggle-voice-mode')
@@ -132,7 +132,11 @@ def wifi_save_ap_config(request):
     return wifi_routes.save_ap_config(request)
 
 # === DSP routes ===
-# Mute functionality is handled via WebSocket only
+@app.post('/audio/mute')
+def audio_mute(request):
+    return audio_routes.toggle_mute(request)
+
+# Mute functionality is also handled via WebSocket
 
 # === Async setup ===
 async def setup_network():

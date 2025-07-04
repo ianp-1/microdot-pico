@@ -58,12 +58,17 @@ def audio_task():
     buf_size = num_frames * BYTES_PER_FRAME
     buf_0 = bytearray(buf_size)
     buf_1 = bytearray(buf_size)
+    silence_buf = bytearray(buf_size)  # Pre-allocated silence buffer
 
     fill_stereo_buffer(buf_0, SINE_WAVE)
     fill_stereo_buffer(buf_1, SINE_WAVE)
+    # Ensure silence buffer is truly zeroed
+    for i in range(buf_size):
+        silence_buf[i] = 0
 
     mv_0 = memoryview(buf_0)
     mv_1 = memoryview(buf_1)
+    mv_silence = memoryview(silence_buf)
 
     led = Pin(14, Pin.OUT)
     led.value(1)
@@ -73,6 +78,8 @@ def audio_task():
     try:
         last_mute = None
         last_volume = None
+        audio_active = True
+        
         while True:
             # Read parameters
             volume = get_param("volume")
@@ -89,11 +96,25 @@ def audio_task():
                 last_mute = mute
                 last_volume = volume
 
-            # Play silence if muted
-            if mute or volume == 0:
-                audio_out.write(bytearray(buf_size))  # zeroed silence
+            # Handle mute by stopping/starting I2S
+            should_be_active = not (mute or volume == 0)
+            
+            if should_be_active and not audio_active:
+                # Start audio
+                print("[DSP] STARTING I2S audio")
+                audio_active = True
+            elif not should_be_active and audio_active:
+                # Stop audio
+                print("[DSP] STOPPING I2S audio") 
+                audio_active = False
+                
+            # Only write audio data if active
+            if audio_active:
+                buffer_to_write = mv_0 if (time.ticks_ms() // 1000) % 2 == 0 else mv_1
+                audio_out.write(buffer_to_write)
             else:
-                audio_out.write(mv_0 if (time.ticks_ms() // 1000) % 2 == 0 else mv_1)
+                # Write silence when muted
+                audio_out.write(mv_silence)
 
             machine.idle()
             time.sleep_ms(2)

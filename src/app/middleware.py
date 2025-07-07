@@ -1,8 +1,8 @@
 """
 Middleware utilities for request/response handling
 """
-from utils import create_error_response
-from logger import main_logger
+from .utils import create_error_response
+from .logger import main_logger
 import utime
 
 class ErrorHandler:

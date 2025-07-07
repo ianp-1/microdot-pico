@@ -1,9 +1,9 @@
 import uasyncio as asyncio
-from model.led_manager import LEDManager
-from model.button_manager import ButtonManager
-from model.eq_processor import EQProcessor
-from model.web_socket_manager import WebSocketManager
-from model.voice_mode_manager import VoiceModeManager
+from model.hardware.led_manager import LEDManager
+from model.hardware.button_manager import ButtonManager
+from model.audio.eq_processor import EQProcessor
+from model.websocket.web_socket_manager import WebSocketManager
+from model.audio.voice_mode_manager import VoiceModeManager
 
 class AudioModel:
     def __init__(self):

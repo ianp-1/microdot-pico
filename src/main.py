@@ -6,11 +6,12 @@ from lib.microdot.websocket import with_websocket
 import uasyncio as asyncio
 import machine
 from model.model import AudioModel
-from model.wifi_manager import WiFiManager
-from app import (
-    WebSocketHandler, WiFiRoutes, AudioRoutes,
-    SERVER_PORT, main_logger
-)
+from model.wifi.wifi_manager import WiFiManager
+from app.websocket_handler import WebSocketHandler
+from app.routes.wifi_routes import WiFiRoutes
+from app.routes.audio_routes import AudioRoutes
+from app.config import SERVER_PORT
+from app.logger import main_logger
 
 # === Start DSP on Core 1 ===
 _thread.start_new_thread(audio_task, ())

@@ -1,9 +1,9 @@
 """
 API route handlers for audio system controls
 """
-from .utils import create_success_response, create_error_response, ValidationError, validate_eq_update, safe_json_parse
-from .logger import api_logger
-from .config import SERVER_NAME, VERSION
+from ..utils import create_success_response, create_error_response, ValidationError, validate_eq_update, safe_json_parse
+from ..logger import api_logger
+from ..config import SERVER_NAME, VERSION
 import utime
 
 class AudioRoutes:

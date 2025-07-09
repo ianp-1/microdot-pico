@@ -11,23 +11,15 @@ export default class ModeManager {
   }
 
   updateMode(mode) {
-    // console.log(`Updating mode from "${this.currentMode}" to "${mode}"`);
     this.currentMode = mode;
-    const display = document.getElementById("currentMode");
-    if (display) {
-      display.textContent = `Current Mode: ${mode}`;
-      // console.log(`Updated display to: Current Mode: ${mode}`);
-    } else {
-      console.error("currentMode element not found!");
+    const modeDisplay = document.getElementById("currentMode");
+    if (modeDisplay) {
+      modeDisplay.textContent = `Current Mode: ${mode}`;
     }
-
-    this.onModeChangeCallback?.(mode);
   }
 
   toggleMode() {
-    this.wsManager.send({
-      action: "toggle_voice_mode",
-    });
+    this.wsManager.send({ action: "toggle_voice_mode" });
   }
 
   toggleDucking() {

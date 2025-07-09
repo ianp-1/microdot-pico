@@ -15,6 +15,8 @@ from app.logger import main_logger
 # === Start DSP on Core 1 ===
 _thread.start_new_thread(audio_task, ())
 
+# === Core 0 functions below ===
+
 # === App setup ===
 app = Microdot()
 model = AudioModel()

@@ -1,5 +1,4 @@
 from machine import ADC
-import json
 import uasyncio as asyncio
 import time
 

@@ -1,6 +1,5 @@
 import _thread
 from dsp.sine_play_i2s import audio_task
-from dsp.dsp_state import set_param
 from lib.microdot import Microdot, send_file
 from lib.microdot.websocket import with_websocket
 import uasyncio as asyncio

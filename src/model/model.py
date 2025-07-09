@@ -1,4 +1,3 @@
-import uasyncio as asyncio
 from model.hardware.led_manager import LEDManager
 from model.hardware.button_manager import ButtonManager
 from model.audio.eq_processor import EQProcessor

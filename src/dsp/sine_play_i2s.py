@@ -1,6 +1,6 @@
 import machine, time, os
 from machine import I2S, Pin, SPI
-from sdcard import SDCard
+from ..lib.sdcard import SDCard
 
 # ======= SD Card CONFIGURATION =======
 SD_SPI = 1

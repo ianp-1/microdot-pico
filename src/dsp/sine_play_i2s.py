@@ -1,8 +1,8 @@
 import machine, time, os
 from machine import I2S, Pin, SPI
 from lib.sdcard import SDCard
-from .dsp_audio import dsp_mix_audio
-from . import dsp_state
+from dsp.dsp_audio import dsp_mix_audio
+from dsp import dsp_state
 
 # ======= SD Card CONFIGURATION =======
 SD_SPI = 1
@@ -16,8 +16,7 @@ SCK_PIN = 20        # BCLK
 WS_PIN = 21         # LRCK (must be SCK_PIN + 1)
 SD_PIN = 18         # DOUT
 I2S_ID = 0
-XMT_PIN = Pin(16, Pin.OUT)
-XMT_PIN.on()
+XMT_PIN = Pin(16, Pin.OUT).on()
 BUFFER_LENGTH_IN_BYTES = 40000
 
 # ======= AUDIO CONFIGURATION =======
@@ -42,7 +41,7 @@ def init_sd_card():
             miso=Pin(12),
         )
         sd = SDCard(spi, cs)
-        sd.init_spi(10_000_000)  # increase SPI bus speed to SD card
+        sd.init_spi(15_000_000)  # increase SPI bus speed to SD card
         os.mount(sd, "/sd")
         print("SD card mounted successfully")
         return True
@@ -65,8 +64,6 @@ def audio_task():
         rate=SAMPLE_RATE_HZ,
         ibuf=BUFFER_LENGTH_IN_BYTES
     )
-    
-    chunk0 = bytearray(1024)
 
     # stereo WAV files
     wav_file_path = '/sd/sound3.wav'
@@ -83,8 +80,8 @@ def audio_task():
                 # Update DSP parameters from Core 0 via shared state
                 dsp_state.core1_update_params()
                 
-                chunk1 = bytearray(f1.read(1024))  
-                chunk2 = bytearray(f2.read(1024)) 
+                chunk1 = bytearray(f1.read(4096))  
+                chunk2 = bytearray(f2.read(4096)) 
                 if not chunk1:
                     f1.seek(44)
                     continue
@@ -102,3 +99,5 @@ def audio_task():
     finally:
         audio_out.deinit()
         os.umount("/sd")
+
+audio_task()

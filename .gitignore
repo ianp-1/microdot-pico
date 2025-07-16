@@ -5,3 +5,5 @@ build/
 **/__pycache__
 
 .github
+
+package-lock.json

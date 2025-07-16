@@ -3,7 +3,7 @@ WiFi route handlers
 """
 import machine
 import uasyncio as asyncio
-from .utils import (
+from ..utils import (
     ValidationError, 
     validate_wifi_mode, 
     validate_wifi_credentials,
@@ -11,8 +11,8 @@ from .utils import (
     create_error_response,
     safe_json_parse
 )
-from .config import DEFAULT_AP_SSID, DEFAULT_AP_PASSWORD
-from .logger import wifi_logger
+from ..config import DEFAULT_AP_SSID, DEFAULT_AP_PASSWORD
+from ..logger import wifi_logger
 
 class WiFiRoutes:
     def __init__(self, wifi_manager):

@@ -8,7 +8,7 @@ import time
 import uasyncio as asyncio
 import lib.mm_wlan as mm_wlan
 from lib.mm_wlan.mm_wlan import wlan as mm_wlan_interface
-from model.wifi_config import WiFiConfig
+from model.wifi.wifi_config import WiFiConfig
 
 class WiFiManager:
     def __init__(self):

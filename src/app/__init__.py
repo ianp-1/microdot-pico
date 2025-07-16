@@ -15,8 +15,8 @@ from .config import (
 from .logger import main_logger, wifi_logger, ws_logger, api_logger
 
 # Route handlers
-from .audio_routes import AudioRoutes
-from .wifi_routes import WiFiRoutes
+from .routes.audio_routes import AudioRoutes
+from .routes.wifi_routes import WiFiRoutes
 from .websocket_handler import WebSocketHandler
 
 # Utilities

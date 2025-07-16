@@ -493,6 +493,15 @@
               🌌 Night
             </button>
           </li>
+          <li>
+            <button
+              class="theme-controller btn btn-sm btn-block btn-ghost justify-start"
+              data-set-theme="mixer-dark"
+              data-act-class="ACTIVECLASS"
+            >
+              🌌 Mixer Dark
+            </button>
+          </li>
         </ul>
       </div>
     </div>
@@ -715,6 +724,54 @@
               </span>
             </h2>
 
+            <!-- Mute Toggle Control -->
+            <div class="form-control mb-6">
+              <div
+                class="card bg-gradient-to-br from-error/5 to-error/10 border border-error/20"
+              >
+                <div class="card-body p-4">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="size-6 text-error"
+                        id="muteIcon"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.5c-.69 0-1.25-.56-1.25-1.25V9.75c0-.69.56-1.25 1.25-1.25H6.75z"
+                        />
+                      </svg>
+                      <div>
+                        <h3 class="font-semibold">Master Audio</h3>
+                        <p class="text-xs text-base-content/70">Mute Control</p>
+                      </div>
+                    </div>
+                    <div class="flex flex-col items-center gap-2">
+                      <button
+                        id="muteButton"
+                        class="btn btn-error btn-sm"
+                        aria-label="Mute button"
+                      >
+                        Mute
+                      </button>
+                      <div
+                        class="text-xs text-base-content/70 flex items-center gap-1"
+                      >
+                        <span>mute:</span>
+                        <span class="font-semibold" id="muteStatus">off</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Voice Mode Control -->
             <div class="form-control mb-6">
               <div
@@ -785,10 +842,8 @@
                       </div>
                     </div>
                     <button
+                      id="toggleDuckingBtn"
                       class="btn btn-secondary btn-outline btn-block"
-                      hx-post="/trigger-ducking"
-                      hx-target="#musicDucking"
-                      hx-swap="innerHTML"
                     >
                       Toggle Ducking
                     </button>
@@ -830,10 +885,8 @@
                       </div>
                     </div>
                     <button
+                      id="toggleFeedbackBtn"
                       class="btn btn-accent btn-outline btn-block"
-                      hx-post="/trigger-feedback"
-                      hx-target="#feedback"
-                      hx-swap="innerHTML"
                     >
                       Toggle Feedback Control
                     </button>

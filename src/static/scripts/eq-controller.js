@@ -31,8 +31,6 @@ export default class EQController {
         slider.addEventListener("mouseup", () => {
           this.setSliderDragging(band, false);
         });
-
-        // console.log(`${band} slider connected`);
       } else {
         console.warn(`${band} slider not found`);
       }
@@ -49,8 +47,6 @@ export default class EQController {
 
   handleSliderInput(band, value) {
     // Real-time visual updates while dragging (no server communication)
-    // console.log(`EQ ${band} preview: ${value}dB`);
-
     // Update chart immediately for visual feedback
     const index = this.bands.indexOf(band);
     this.chart.updateBand(index, value);
@@ -107,7 +103,6 @@ export default class EQController {
   }
 
   updateControlStatus(band, source) {
-    // console.log(`[EQ Controller] Updating ${band} control status to: ${source}`);
     this.controlStatus[band] = source;
     const statusElement = document.getElementById(`${band}ControlStatus`);
     if (statusElement) {
@@ -117,7 +112,6 @@ export default class EQController {
         source === "digital"
           ? "text-xs text-emerald-400 font-semibold"
           : "text-xs text-gray-400";
-      // console.log(`[EQ Controller] Updated ${band} status element text to: ${statusElement.textContent}`);
     } else {
       console.warn(
         `[EQ Controller] Status element not found for band: ${band}`
@@ -133,8 +127,6 @@ export default class EQController {
   }
 
   updateFromServer(eqData) {
-    // console.log("Updating from server:", eqData);
-
     this.bands.forEach((band) => {
       if (eqData[band] !== undefined) {
         const value = parseFloat(eqData[band]);

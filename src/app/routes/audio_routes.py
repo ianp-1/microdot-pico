@@ -1,9 +1,10 @@
 """
 API route handlers for audio system controls
 """
-from ..utils import create_success_response, create_error_response, ValidationError, validate_eq_update, safe_json_parse
+from ..utils import create_success_response, create_error_response, ValidationError, validate_eq_update, validate_dsp_mixer_update, safe_json_parse
 from ..logger import api_logger
 from ..config import SERVER_NAME, VERSION
+from dsp import dsp_state
 import utime
 
 class AudioRoutes:
@@ -141,6 +142,42 @@ class AudioRoutes:
         except Exception as e:
             self.logger.exception("System info failed", e)
             return create_error_response("Failed to get system information")
+    
+    def update_dsp_mixer(self, request):
+        """Update DSP mixer parameters"""
+        try:
+            # Parse JSON body
+            data = safe_json_parse(request.body)
+            if not data:
+                return create_error_response("Invalid JSON format")
+            
+            # Validate required parameters
+            param = data.get('param')
+            value = data.get('value')
+            
+            if not param or value is None:
+                return create_error_response("Missing required parameters: param, value")
+            
+            # Validate parameter values
+            validate_dsp_mixer_update(param, value)
+            
+            # Update DSP state
+            success = dsp_state.set_param(param, value)
+            if not success:
+                return create_error_response(f"Failed to update DSP parameter: {param}")
+            
+            self.logger.info(f"DSP mixer updated: {param} = {value}")
+            return create_success_response(f"DSP mixer {param} updated successfully", {
+                'param': param,
+                'value': value
+            })
+            
+        except ValidationError as e:
+            self.logger.warn(f"DSP mixer validation error: {e}")
+            return create_error_response(str(e))
+        except Exception as e:
+            self.logger.exception("DSP mixer update failed", e)
+            return create_error_response("Failed to update DSP mixer")
     
     def _get_eq_state(self):
         """Get current EQ state"""

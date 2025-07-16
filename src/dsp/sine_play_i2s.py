@@ -1,6 +1,8 @@
 import machine, time, os
 from machine import I2S, Pin, SPI
-from ..lib.sdcard import SDCard
+from lib.sdcard import SDCard
+from .dsp_audio import dsp_mix_audio
+from . import dsp_state
 
 # ======= SD Card CONFIGURATION =======
 SD_SPI = 1
@@ -14,7 +16,8 @@ SCK_PIN = 20        # BCLK
 WS_PIN = 21         # LRCK (must be SCK_PIN + 1)
 SD_PIN = 18         # DOUT
 I2S_ID = 0
-XMT_PIN = Pin(16, Pin.OUT).on
+XMT_PIN = Pin(16, Pin.OUT)
+XMT_PIN.on()
 BUFFER_LENGTH_IN_BYTES = 40000
 
 # ======= AUDIO CONFIGURATION =======
@@ -77,8 +80,11 @@ def audio_task():
             print("========== START PLAYBACK FROM SD CARD ==========")
             
             while True:
-                chunk1 = bytearray(f1.read(8192))
-                chunk2 = bytearray(f2.read(8192))
+                # Update DSP parameters from Core 0 via shared state
+                dsp_state.core1_update_params()
+                
+                chunk1 = bytearray(f1.read(1024))  
+                chunk2 = bytearray(f2.read(1024)) 
                 if not chunk1:
                     f1.seek(44)
                     continue
@@ -86,8 +92,8 @@ def audio_task():
                     f2.seek(44)
                     continue
                 
-                for i in range(len(chunk1)):
-                    chunk1[i] += chunk2[i]
+                # Use DSP audio mixing functions with real-time parameters
+                dsp_mix_audio(chunk1, chunk2)
                 audio_out.write(chunk1)
 
     except (KeyboardInterrupt, Exception) as e:

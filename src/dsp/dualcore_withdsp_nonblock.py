@@ -52,45 +52,53 @@ def SetMixerParam(gain_ch1=None, gain_ch2=None, pan=None, master_gain=None):
         if master_gain is not None: P_master_gain = max(0.0, float(master_gain))
     print(f"Mixer: g1={P_gain_ch1:.2f}, g2={P_gain_ch2:.2f}, pan={P_pan:.2f}, master={P_master_gain:.2f}")
 
-# ========= VIPER DSP (MIXER) - TRUE STEREO BALANCE LOGIC =========
+# ========= VIPER DSP (MIXER) - CORRECTED 16-BIT STEREO MIXER =========
 @micropython.viper
 def mix_audio_viper(dest, a, b, n: int, g1: int, g2: int, pan: int, master: int):
     """
-    Treats 'a' and 'b' as independent left and right sources, and 'pan'
-    acts as a balance control between them for true stereo separation.
+    Mixes two 16-bit mono audio streams ('a' and 'b') into a single 16-bit
+    stereo stream ('dest'). It applies individual gains, a master gain, and
+    a true stereo balance (pan). This version is optimized for performance
+    and correct 16-bit sample handling.
     """
     FIX = 8  # 8 fractional bits for fixed-point math
 
+    # Create 16-bit signed pointers for efficient sample access
+    a_ptr = ptr16(a)
+    b_ptr = ptr16(b)
+    dest_ptr = ptr16(dest)
+
     for i in range(n):
         # --- 1. Fetch signed 16-bit samples ---
-        s1 = int(a[i])  # Source 'a' is the left channel input
-        s2 = int(b[i])  # Source 'b' is the right channel input
+        s1 = a_ptr[i]
+        s2 = b_ptr[i]
 
         # --- 2. Apply individual gains and master gain ---
         l = (((s1 * g1) >> FIX) * master) >> FIX
         r = (((s2 * g2) >> FIX) * master) >> FIX
 
         # --- 3. Apply balance control (pan) ---
-        # This logic ensures full separation at the extremes.
+        # Pan ranges from -256 (full left) to 256 (full right)
         if pan > 0:  # Pan to the right, reduce left channel volume
-            # pan_gain goes from 256 (no reduction) down to 0 (full reduction)
             pan_gain = 256 - pan
             l = (l * pan_gain) >> FIX
         elif pan < 0:  # Pan to the left, reduce right channel volume
-            # pan is negative, so adding it reduces the gain.
-            # pan_gain goes from 256 (no reduction) down to 0 (full reduction)
-            pan_gain = 256 + pan
+            pan_gain = 256 + pan  # pan is negative, so this is a reduction
             r = (r * pan_gain) >> FIX
 
-        # --- 4. Final clip & store ---
-        if l > 32767: l = 32767
-        elif l < -32768: l = -32768
-        if r > 32767: r = 32767
-        elif r < -32768: r = -32768
+        # --- 4. Final clip ---
+        if l > 32767:
+            l = 32767
+        elif l < -32768:
+            l = -32768
+        if r > 32767:
+            r = 32767
+        elif r < -32768:
+            r = -32768
 
-        di = i << 1  # i*2
-        dest[di] = l
-        dest[di + 1] = r
+        # --- 5. Store interleaved stereo samples ---
+        dest_ptr[i * 2] = l
+        dest_ptr[i * 2 + 1] = r
 
 
 # ========= GLOBALS =========
@@ -145,6 +153,38 @@ def ring_buffer_read(max_bytes):
             out[part1_len:out_len] = ring_buffer[0 : part2_len]
             rb_tail = part2_len
     return out
+
+def ring_buffer_read_into(buf: memoryview):
+    """
+    Reads data from the ring buffer into a pre-allocated buffer to avoid
+    memory allocation in a critical path. Returns the number of bytes read.
+    """
+    global rb_tail
+    available = ring_buffer_available()
+    if available == 0:
+        return 0
+    
+    read_len = len(buf)
+    out_len = min(available, read_len)
+
+    with rb_lock:
+        end_space = RING_BUFFER_SIZE - rb_tail
+        part1_len = min(out_len, end_space)
+        
+        # Create memoryviews to avoid copying data
+        rb_view = memoryview(ring_buffer)
+        
+        # Read the first part
+        buf[0:part1_len] = rb_view[rb_tail : rb_tail + part1_len]
+        rb_tail = (rb_tail + part1_len) % RING_BUFFER_SIZE
+        
+        # Read the second part if it wrapped around
+        part2_len = out_len - part1_len
+        if part2_len > 0:
+            buf[part1_len:out_len] = rb_view[0 : part2_len]
+            rb_tail = part2_len
+            
+    return out_len
 
 # ========= CORE 1: SD/DSP PRODUCER (MODIFIED) =========
 def audio_core_task():
@@ -224,6 +264,9 @@ async def async_i2s_consumer():
     global audio_running
     audio_out = None
     
+    # Pre-allocate a buffer for reading from the ring buffer
+    read_buf = memoryview(bytearray(1024))
+
     try:
         print("[Core 0] Initializing I2S for audio output...")
         audio_out = I2S(
@@ -234,14 +277,14 @@ async def async_i2s_consumer():
         print("[Core 0] I2S initialized successfully")
         
         while audio_running:
-            data = ring_buffer_read(1024)
-            if data:
-                # This is a blocking write, but it's usually fast.
-                audio_out.write(data)
+            bytes_read = ring_buffer_read_into(read_buf)
+            if bytes_read > 0:
+                # Write the data from the pre-allocated buffer
+                audio_out.write(read_buf[:bytes_read])
                 await asyncio.sleep_ms(0) # Yield to other tasks
             else:
                 # Yield control to other async tasks when no audio data
-                await asyncio.sleep_ms(5)
+                await asyncio.sleep_ms(1)
 
     except Exception as e:
         print(f"[Core 0] I2S Consumer Error: {e}")
@@ -316,7 +359,8 @@ if __name__ == "__main__":
         # Start the I2S consumer and control loop on the main core
         i2s_and_control_loop()
     except KeyboardInterrupt:
-        print("\n[Core 0] Keyboard interrupt received. Stopping...")
+        print("
+[Core 0] Keyboard interrupt received. Stopping...")
     except Exception as e:
         print(f"[Core 0] FATAL ERROR: {e}")
     finally:

@@ -359,8 +359,7 @@ if __name__ == "__main__":
         # Start the I2S consumer and control loop on the main core
         i2s_and_control_loop()
     except KeyboardInterrupt:
-        print("
-[Core 0] Keyboard interrupt received. Stopping...")
+        print("[Core 0] Keyboard interrupt received. Stopping...")
     except Exception as e:
         print(f"[Core 0] FATAL ERROR: {e}")
     finally:

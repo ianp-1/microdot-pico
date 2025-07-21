@@ -11,10 +11,10 @@ from app.routes.audio_routes import AudioRoutes
 from app.config import SERVER_PORT
 from app.logger import main_logger
 from dsp import dsp_state
-from dsp.sine_play_i2s import audio_task
+from dsp.dualcore_withdsp_nonblock import audio_core_task, async_i2s_consumer
 
 # === Start DSP on Core 1 ===
-_thread.start_new_thread(audio_task, ())
+_thread.start_new_thread(audio_core_task, ())
 
 # === Core 0 functions below ===
 
@@ -160,6 +160,7 @@ async def setup_background_tasks():
     main_logger.info("Starting background tasks...")
     try:
         asyncio.create_task(model.monitor_dials_loop())
+        asyncio.create_task(async_i2s_consumer())
         main_logger.info("Background tasks started successfully")
     except Exception as e:
         main_logger.exception("Background tasks error", e)

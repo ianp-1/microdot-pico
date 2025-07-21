@@ -1,5 +1,5 @@
 import _thread
-from dsp.dsp_audio import SetMixerParam
+from .dualcore_withdsp_nonblock import SetMixerParam
 
 # Core 0 to Core 1 (DSP) communication
 

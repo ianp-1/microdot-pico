@@ -16,15 +16,6 @@ EQ_MIN_DB = -12
 EQ_MAX_DB = 12
 EQ_DEFAULT_DB = 0
 
-# DSP Mixer Configuration
-DSP_MIXER_PARAMS = ['master_gain', 'gain_ch1', 'gain_ch2', 'pan']
-DSP_GAIN_MIN = 0.0
-DSP_GAIN_MAX = 2.0
-DSP_GAIN_DEFAULT = 1.0
-DSP_PAN_MIN = -1.0
-DSP_PAN_MAX = 1.0
-DSP_PAN_DEFAULT = 0.0
-
 # WebSocket Message Types
 WS_MESSAGES = {
     'PING': 'ping',

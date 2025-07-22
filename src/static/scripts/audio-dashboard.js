@@ -2,6 +2,7 @@ import WebSocketManager from "./web-socket-manager.js";
 import EQChart from "./eq-chart.js";
 import EQController from "./eq-controller.js";
 import ModeManager from "./mode-manager.js";
+import DSPMixerController from "./dsp-mixer-controller.js";
 
 export default class AudioDashboardApp {
   constructor() {
@@ -9,6 +10,7 @@ export default class AudioDashboardApp {
     this.eqChart = null;
     this.eqController = null;
     this.modeManager = null;
+    this.dspMixerController = null;
 
     this.init();
   }
@@ -39,8 +41,8 @@ export default class AudioDashboardApp {
     // Initialize Mode Manager
     this.modeManager = new ModeManager(this.wsManager);
 
-    // Setup DSP Mixer controls
-    this.setupDSPMixerControls();
+    // Initialize DSP Mixer Controller
+    this.dspMixerController = new DSPMixerController(this.wsManager);
 
     // Connect toggle button to mode manager
     this.setupModeToggleButton();
@@ -76,8 +78,8 @@ export default class AudioDashboardApp {
     }
 
     // Update DSP mixer state
-    if (message.dsp_mixer) {
-      this.updateDSPMixerDisplay(message.dsp_mixer);
+    if (this.dspMixerController && message.dsp_mixer) {
+      this.dspMixerController.updateFromServer(message.dsp_mixer);
     }
   }
 
@@ -198,108 +200,8 @@ export default class AudioDashboardApp {
   }
 
   handleDSPMixerUpdate(message) {
-    this.updateDSPMixerDisplay(message);
-  }
-
-  setupDSPMixerControls() {
-    const sliders = [
-      {
-        id: "masterGainSlider",
-        param: "master_gain",
-        label: "masterGainLabel",
-        value: "masterGainValue",
-      },
-      {
-        id: "gainCh1Slider",
-        param: "gain_ch1",
-        label: "gainCh1Label",
-        value: "gainCh1Value",
-      },
-      {
-        id: "gainCh2Slider",
-        param: "gain_ch2",
-        label: "gainCh2Label",
-        value: "gainCh2Value",
-      },
-      { id: "panSlider", param: "pan", label: "panLabel", value: "panValue" },
-    ];
-
-    sliders.forEach((slider) => {
-      const element = document.getElementById(slider.id);
-      if (element) {
-        element.addEventListener("input", (e) => {
-          const value = parseFloat(e.target.value);
-          this.updateDSPMixerParameter(slider.param, value);
-          this.updateDSPMixerLabels(slider.param, value);
-        });
-      }
-    });
-  }
-
-  updateDSPMixerParameter(param, value) {
-    fetch("/update-dsp-mixer", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        param: param,
-        value: value,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (!data.success) {
-          console.error("DSP mixer update failed:", data.error);
-        }
-      })
-      .catch((error) => {
-        console.error("Error updating DSP mixer:", error);
-      });
-  }
-
-  updateDSPMixerDisplay(mixerData) {
-    // Update sliders
-    const sliders = {
-      masterGainSlider: mixerData.master_gain,
-      gainCh1Slider: mixerData.gain_ch1,
-      gainCh2Slider: mixerData.gain_ch2,
-      panSlider: mixerData.pan,
-    };
-
-    Object.keys(sliders).forEach((sliderId) => {
-      const slider = document.getElementById(sliderId);
-      if (slider) {
-        slider.value = sliders[sliderId];
-      }
-    });
-
-    // Update labels and values
-    this.updateDSPMixerLabels("master_gain", mixerData.master_gain);
-    this.updateDSPMixerLabels("gain_ch1", mixerData.gain_ch1);
-    this.updateDSPMixerLabels("gain_ch2", mixerData.gain_ch2);
-    this.updateDSPMixerLabels("pan", mixerData.pan);
-  }
-
-  updateDSPMixerLabels(param, value) {
-    const mappings = {
-      master_gain: { label: "masterGainLabel", value: "masterGainValue" },
-      gain_ch1: { label: "gainCh1Label", value: "gainCh1Value" },
-      gain_ch2: { label: "gainCh2Label", value: "gainCh2Value" },
-      pan: { label: "panLabel", value: "panValue" },
-    };
-
-    const mapping = mappings[param];
-    if (mapping) {
-      const labelElement = document.getElementById(mapping.label);
-      const valueElement = document.getElementById(mapping.value);
-
-      if (labelElement) {
-        labelElement.textContent = value.toFixed(1);
-      }
-      if (valueElement) {
-        valueElement.textContent = value.toFixed(1);
-      }
+    if (this.dspMixerController) {
+      this.dspMixerController.updateFromServer(message);
     }
   }
 

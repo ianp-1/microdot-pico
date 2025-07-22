@@ -54,5 +54,11 @@ class AudioModel:
         """Set target EQ value with source tracking"""
         self.eq_processor.set_target_eq(band, value, source)
     
+    def set_dsp_mixer_param(self, param, value):
+        """Set DSP mixer parameter"""
+        from .utils import validate_dsp_mixer_update
+        param, value = validate_dsp_mixer_update(param, value)
+        dsp_state.set_param(param, value)
+    
     async def monitor_dials_loop(self, interval_ms=100):
         await self.eq_processor.monitor_loop(interval_ms)

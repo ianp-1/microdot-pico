@@ -717,159 +717,128 @@
                   />
                 </svg>
               </div>
-              DSP Mixer
+              <span
+                class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+              >
+                DSP Mixer
+              </span>
             </h2>
 
             <!-- DSP Mixer Values Display -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div class="text-center">
-                <div
-                  class="text-2xl font-bold text-primary"
-                  id="masterGainValue"
-                >
-                  1.0
-                </div>
-                <div class="text-sm text-base-content/60">Master Gain</div>
+            <div
+              class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-base-200/50 rounded-xl border border-base-300/30"
+            >
+              <div
+                class="text-center p-2 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20"
+              >
+                <div class="text-xs text-primary font-semibold">MASTER</div>
+                <div class="text-lg font-mono" id="masterGainValue">1.0</div>
               </div>
-              <div class="text-center">
-                <div
-                  class="text-2xl font-bold text-secondary"
-                  id="gainCh1Value"
-                >
-                  0.5
-                </div>
-                <div class="text-sm text-base-content/60">Channel 1</div>
+              <div
+                class="text-center p-2 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-lg border border-secondary/20"
+              >
+                <div class="text-xs text-secondary font-semibold">CH 1</div>
+                <div class="text-lg font-mono" id="gainCh1Value">0.5</div>
               </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold text-accent" id="gainCh2Value">
-                  0.5
-                </div>
-                <div class="text-sm text-base-content/60">Channel 2</div>
+              <div
+                class="text-center p-2 bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg border border-accent/20"
+              >
+                <div class="text-xs text-accent font-semibold">CH 2</div>
+                <div class="text-lg font-mono" id="gainCh2Value">0.5</div>
               </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold text-info" id="panValue">
-                  0.0
-                </div>
-                <div class="text-sm text-base-content/60">Pan</div>
+              <div
+                class="text-center p-2 bg-gradient-to-br from-info/10 to-info/5 rounded-lg border border-info/20"
+              >
+                <div class="text-xs text-info font-semibold">PAN</div>
+                <div class="text-lg font-mono" id="panValue">0.0</div>
               </div>
             </div>
 
             <!-- DSP Mixer Controls -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div class="space-y-4">
-                <div>
-                  <label class="label">
-                    <span class="label-text font-semibold">Master Gain</span>
-                    <span
-                      class="label-text-alt text-primary"
-                      id="masterGainLabel"
-                      >1.0</span
-                    >
-                  </label>
-                  <input
-                    type="range"
-                    id="masterGainSlider"
-                    min="0"
-                    max="2"
-                    step="0.1"
-                    value="1.0"
-                    class="range range-primary w-full"
-                  />
-                  <div
-                    class="w-full flex justify-between text-xs px-2 mt-1 text-base-content/60"
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+              <!-- Master Gain -->
+              <div class="form-control">
+                <label class="label pb-1">
+                  <span class="label-text font-semibold flex items-center gap-2"
+                    ><div class="w-3 h-3 rounded-full bg-primary"></div>
+                    Master Gain</span
                   >
-                    <span>0.0</span>
-                    <span>0.5</span>
-                    <span>1.0</span>
-                    <span>1.5</span>
-                    <span>2.0</span>
-                  </div>
-                </div>
+                  <span class="label-text-alt" id="masterGainLabel">1.0</span>
+                </label>
+                <input
+                  type="range"
+                  id="masterGainSlider"
+                  min="0"
+                  max="2"
+                  step="0.01"
+                  value="1.0"
+                  class="range range-sm range-primary"
+                />
+              </div>
 
-                <div>
-                  <label class="label">
-                    <span class="label-text font-semibold">Channel 1 Gain</span>
-                    <span
-                      class="label-text-alt text-secondary"
-                      id="gainCh1Label"
-                      >0.5</span
-                    >
-                  </label>
-                  <input
-                    type="range"
-                    id="gainCh1Slider"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value="0.5"
-                    class="range range-secondary w-full"
-                  />
-                  <div
-                    class="w-full flex justify-between text-xs px-2 mt-1 text-base-content/60"
+              <!-- Pan -->
+              <div class="form-control">
+                <label class="label pb-1">
+                  <span class="label-text font-semibold flex items-center gap-2"
+                    ><div class="w-3 h-3 rounded-full bg-info"></div>
+                    Pan</span
                   >
-                    <span>0.0</span>
-                    <span>0.25</span>
-                    <span>0.5</span>
-                    <span>0.75</span>
-                    <span>1.0</span>
-                  </div>
+                  <span class="label-text-alt" id="panLabel">0.0</span>
+                </label>
+                <input
+                  type="range"
+                  id="panSlider"
+                  min="-1"
+                  max="1"
+                  step="0.01"
+                  value="0.0"
+                  class="range range-sm range-info"
+                />
+                <div class="w-full flex justify-between text-xs px-1">
+                  <span>L</span>
+                  <span>C</span>
+                  <span>R</span>
                 </div>
               </div>
 
-              <div class="space-y-4">
-                <div>
-                  <label class="label">
-                    <span class="label-text font-semibold">Channel 2 Gain</span>
-                    <span class="label-text-alt text-accent" id="gainCh2Label"
-                      >0.5</span
-                    >
-                  </label>
-                  <input
-                    type="range"
-                    id="gainCh2Slider"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value="0.5"
-                    class="range range-accent w-full"
-                  />
-                  <div
-                    class="w-full flex justify-between text-xs px-2 mt-1 text-base-content/60"
+              <!-- Channel 1 Gain -->
+              <div class="form-control">
+                <label class="label pb-1">
+                  <span class="label-text font-semibold flex items-center gap-2"
+                    ><div class="w-3 h-3 rounded-full bg-secondary"></div>
+                    Channel 1 Gain</span
                   >
-                    <span>0.0</span>
-                    <span>0.25</span>
-                    <span>0.5</span>
-                    <span>0.75</span>
-                    <span>1.0</span>
-                  </div>
-                </div>
+                  <span class="label-text-alt" id="gainCh1Label">0.5</span>
+                </label>
+                <input
+                  type="range"
+                  id="gainCh1Slider"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.5"
+                  class="range range-sm range-secondary"
+                />
+              </div>
 
-                <div>
-                  <label class="label">
-                    <span class="label-text font-semibold">Pan</span>
-                    <span class="label-text-alt text-info" id="panLabel"
-                      >0.0</span
-                    >
-                  </label>
-                  <input
-                    type="range"
-                    id="panSlider"
-                    min="-1"
-                    max="1"
-                    step="0.1"
-                    value="0.0"
-                    class="range range-info w-full"
-                  />
-                  <div
-                    class="w-full flex justify-between text-xs px-2 mt-1 text-base-content/60"
+              <!-- Channel 2 Gain -->
+              <div class="form-control">
+                <label class="label pb-1">
+                  <span class="label-text font-semibold flex items-center gap-2"
+                    ><div class="w-3 h-3 rounded-full bg-accent"></div>
+                    Channel 2 Gain</span
                   >
-                    <span>L</span>
-                    <span>-0.5</span>
-                    <span>C</span>
-                    <span>+0.5</span>
-                    <span>R</span>
-                  </div>
-                </div>
+                  <span class="label-text-alt" id="gainCh2Label">0.5</span>
+                </label>
+                <input
+                  type="range"
+                  id="gainCh2Slider"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.5"
+                  class="range range-sm range-accent"
+                />
               </div>
             </div>
           </div>

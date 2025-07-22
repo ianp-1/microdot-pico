@@ -150,21 +150,9 @@ class WebSocketHandler:
             param = data.get('param')
             value = data.get('value')
             
-            if param is None or value is None:
-                raise ValidationError("Missing param or value")
+            # Validate and update through the model
+            self.model.set_dsp_mixer_param(param, value)
             
-            # Validate the parameter and value
-            param, value = validate_dsp_mixer_update(param, value)
-            
-            # Update the DSP state
-            from dsp.dsp_state import set_param
-            if set_param(param, value):
-                # Broadcast the update to all clients
-                await self.model.ws_manager.broadcast_dsp_mixer_update(param, value)
-                self.logger.info(f"Updated DSP mixer {param} to {value}")
-            else:
-                await ws.send(json.dumps({'error': f'Failed to update {param}'}))
-                
         except ValidationError as e:
             await ws.send(json.dumps({'error': str(e)}))
             self.logger.error(f"DSP mixer validation error: {e}")

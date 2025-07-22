@@ -3,7 +3,7 @@ WebSocket message handlers
 """
 import json
 from .config import WS_MESSAGES
-from .utils import ValidationError, validate_eq_update
+from .utils import ValidationError, validate_eq_update, validate_dsp_mixer_update
 from .logger import ws_logger
 
 class WebSocketHandler:
@@ -18,6 +18,7 @@ class WebSocketHandler:
             WS_MESSAGES['FEEDBACK_TOGGLE']: self._handle_feedback_toggle,
             WS_MESSAGES['MUTE_TOGGLE']: self._handle_mute_toggle,
             WS_MESSAGES['GET_STATE']: self._handle_get_state,
+            WS_MESSAGES['DSP_MIXER_UPDATE']: self._handle_dsp_mixer_update,
         }
     
     async def handle_connection(self, ws):
@@ -42,7 +43,8 @@ class WebSocketHandler:
             'feedback': self.model.voice_mode_manager.feedback_enabled,
             'ducking': self.model.voice_mode_manager.ducking_enabled,
             'mute': get_param('mute'),
-            'eq': self._get_eq_state()
+            'eq': self._get_eq_state(),
+            'dsp_mixer': self._get_dsp_mixer_state()
         }
         await ws.send(json.dumps(initial_state))
         self.logger.info("Sent initial state to client")
@@ -131,3 +133,41 @@ class WebSocketHandler:
             'mid': self.model.eq_processor.live_db['mid'], 
             'high': self.model.eq_processor.live_db['high']
         }
+    
+    def _get_dsp_mixer_state(self):
+        """Get current DSP mixer state"""
+        from dsp.dsp_state import get_param
+        return {
+            'master_gain': get_param('master_gain'),
+            'gain_ch1': get_param('gain_ch1'),
+            'gain_ch2': get_param('gain_ch2'),
+            'pan': get_param('pan')
+        }
+    
+    async def _handle_dsp_mixer_update(self, ws, data):
+        """Handle DSP mixer parameter update"""
+        try:
+            param = data.get('param')
+            value = data.get('value')
+            
+            if param is None or value is None:
+                raise ValidationError("Missing param or value")
+            
+            # Validate the parameter and value
+            param, value = validate_dsp_mixer_update(param, value)
+            
+            # Update the DSP state
+            from dsp.dsp_state import set_param
+            if set_param(param, value):
+                # Broadcast the update to all clients
+                await self.model.ws_manager.broadcast_dsp_mixer_update(param, value)
+                self.logger.info(f"Updated DSP mixer {param} to {value}")
+            else:
+                await ws.send(json.dumps({'error': f'Failed to update {param}'}))
+                
+        except ValidationError as e:
+            await ws.send(json.dumps({'error': str(e)}))
+            self.logger.error(f"DSP mixer validation error: {e}")
+        except Exception as e:
+            await ws.send(json.dumps({'error': 'Internal server error'}))
+            self.logger.exception("DSP mixer update error", e)

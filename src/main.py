@@ -1,5 +1,4 @@
 import _thread
-from dsp.sine_play_i2s import audio_task
 from lib.microdot import Microdot, send_file
 from lib.microdot.websocket import with_websocket
 import uasyncio as asyncio
@@ -11,9 +10,11 @@ from app.routes.wifi_routes import WiFiRoutes
 from app.routes.audio_routes import AudioRoutes
 from app.config import SERVER_PORT
 from app.logger import main_logger
+from dsp import dsp_state
+from dsp.dualcore_withdsp_nonblock import audio_core_task, async_i2s_consumer
 
 # === Start DSP on Core 1 ===
-_thread.start_new_thread(audio_task, ())
+_thread.start_new_thread(audio_core_task, ())
 
 # === Core 0 functions below ===
 
@@ -70,6 +71,11 @@ def current_eq_json(request):
 def update_eq(request):
     """Update EQ values via HTTP POST"""
     return audio_routes.update_eq(request)
+
+@app.post('/update-dsp-mixer')
+def update_dsp_mixer(request):
+    """Update DSP mixer parameters via HTTP POST"""
+    return audio_routes.update_dsp_mixer(request)
 
 @app.route('/health')
 def health_check(request):
@@ -154,6 +160,7 @@ async def setup_background_tasks():
     main_logger.info("Starting background tasks...")
     try:
         asyncio.create_task(model.monitor_dials_loop())
+        asyncio.create_task(async_i2s_consumer())
         main_logger.info("Background tasks started successfully")
     except Exception as e:
         main_logger.exception("Background tasks error", e)
@@ -161,6 +168,10 @@ async def setup_background_tasks():
 
 async def main():
     main_logger.info(f"Starting Audio Dashboard on port {SERVER_PORT}...")
+    
+    # Initialize DSP state
+    dsp_state.initialize_dsp_state()
+    
     asyncio.create_task(setup_network())
     asyncio.create_task(setup_background_tasks())
     await app.start_server(port=SERVER_PORT)

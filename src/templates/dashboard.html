@@ -693,9 +693,9 @@
           </div>
         </div>
 
-        <!-- DSP Mixer Panel -->
+        <!-- Audio Processing Panel -->
         <div
-          class="card bg-base-100/80 backdrop-blur-sm shadow-2xl border border-base-300/50"
+          class="card bg-base-100/80 backdrop-blur-sm shadow-2xl border border-base-300/50 xl:col-span-1"
         >
           <div class="card-body">
             <h2 class="card-title text-2xl mb-6">
@@ -720,331 +720,307 @@
               <span
                 class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
               >
-                DSP Mixer
+                Audio Processing
               </span>
             </h2>
 
-            <!-- DSP Mixer Values Display -->
-            <div
-              class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-base-200/50 rounded-xl border border-base-300/30"
-            >
+            <!-- DSP Mixer Section -->
+            <div class="mb-6">
+              <h3 class="text-lg font-semibold mb-4">DSP Mixer</h3>
+              <!-- DSP Mixer Values Display -->
               <div
-                class="text-center p-2 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20"
+                class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-base-200/50 rounded-xl border border-base-300/30"
               >
-                <div class="text-xs text-primary font-semibold">MASTER</div>
-                <div class="text-lg font-mono" id="masterGainValue">1.0</div>
-              </div>
-              <div
-                class="text-center p-2 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-lg border border-secondary/20"
-              >
-                <div class="text-xs text-secondary font-semibold">CH 1</div>
-                <div class="text-lg font-mono" id="gainCh1Value">0.5</div>
-              </div>
-              <div
-                class="text-center p-2 bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg border border-accent/20"
-              >
-                <div class="text-xs text-accent font-semibold">CH 2</div>
-                <div class="text-lg font-mono" id="gainCh2Value">0.5</div>
-              </div>
-              <div
-                class="text-center p-2 bg-gradient-to-br from-info/10 to-info/5 rounded-lg border border-info/20"
-              >
-                <div class="text-xs text-info font-semibold">PAN</div>
-                <div class="text-lg font-mono" id="panValue">0.0</div>
-              </div>
-            </div>
-
-            <!-- DSP Mixer Controls -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-              <!-- Master Gain -->
-              <div class="form-control">
-                <label class="label pb-1">
-                  <span class="label-text font-semibold flex items-center gap-2"
-                    ><div class="w-3 h-3 rounded-full bg-primary"></div>
-                    Master Gain</span
-                  >
-                  <span class="label-text-alt" id="masterGainLabel">1.0</span>
-                </label>
-                <input
-                  type="range"
-                  id="masterGainSlider"
-                  min="0"
-                  max="2"
-                  step="0.01"
-                  value="1.0"
-                  class="range range-sm range-primary"
-                />
-              </div>
-
-              <!-- Pan -->
-              <div class="form-control">
-                <label class="label pb-1">
-                  <span class="label-text font-semibold flex items-center gap-2"
-                    ><div class="w-3 h-3 rounded-full bg-info"></div>
-                    Pan</span
-                  >
-                  <span class="label-text-alt" id="panLabel">0.0</span>
-                </label>
-                <input
-                  type="range"
-                  id="panSlider"
-                  min="-1"
-                  max="1"
-                  step="0.01"
-                  value="0.0"
-                  class="range range-sm range-info"
-                />
-                <div class="w-full flex justify-between text-xs px-1">
-                  <span>L</span>
-                  <span>C</span>
-                  <span>R</span>
+                <div
+                  class="text-center p-2 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20"
+                >
+                  <div class="text-xs text-primary font-semibold">MASTER</div>
+                  <div class="text-lg font-mono" id="masterGainValue">1.0</div>
+                </div>
+                <div
+                  class="text-center p-2 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-lg border border-secondary/20"
+                >
+                  <div class="text-xs text-secondary font-semibold">CH 1</div>
+                  <div class="text-lg font-mono" id="gainCh1Value">0.5</div>
+                </div>
+                <div
+                  class="text-center p-2 bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg border border-accent/20"
+                >
+                  <div class="text-xs text-accent font-semibold">CH 2</div>
+                  <div class="text-lg font-mono" id="gainCh2Value">0.5</div>
+                </div>
+                <div
+                  class="text-center p-2 bg-gradient-to-br from-info/10 to-info/5 rounded-lg border border-info/20"
+                >
+                  <div class="text-xs text-info font-semibold">PAN</div>
+                  <div class="text-lg font-mono" id="panValue">0.0</div>
                 </div>
               </div>
 
-              <!-- Channel 1 Gain -->
-              <div class="form-control">
-                <label class="label pb-1">
-                  <span class="label-text font-semibold flex items-center gap-2"
-                    ><div class="w-3 h-3 rounded-full bg-secondary"></div>
-                    Channel 1 Gain</span
-                  >
-                  <span class="label-text-alt" id="gainCh1Label">0.5</span>
-                </label>
-                <input
-                  type="range"
-                  id="gainCh1Slider"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value="0.5"
-                  class="range range-sm range-secondary"
-                />
-              </div>
+              <!-- DSP Mixer Controls -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <!-- Master Gain -->
+                <div class="form-control">
+                  <label class="label pb-1">
+                    <span class="label-text font-semibold flex items-center gap-2"
+                      ><div class="w-3 h-3 rounded-full bg-primary"></div>
+                      Master Gain</span
+                    >
+                    <span class="label-text-alt" id="masterGainLabel">1.0</span>
+                  </label>
+                  <input
+                    type="range"
+                    id="masterGainSlider"
+                    min="0"
+                    max="2"
+                    step="0.01"
+                    value="1.0"
+                    class="range range-sm range-primary"
+                  />
+                </div>
 
-              <!-- Channel 2 Gain -->
-              <div class="form-control">
-                <label class="label pb-1">
-                  <span class="label-text font-semibold flex items-center gap-2"
-                    ><div class="w-3 h-3 rounded-full bg-accent"></div>
-                    Channel 2 Gain</span
-                  >
-                  <span class="label-text-alt" id="gainCh2Label">0.5</span>
-                </label>
-                <input
-                  type="range"
-                  id="gainCh2Slider"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value="0.5"
-                  class="range range-sm range-accent"
-                />
+                <!-- Pan -->
+                <div class="form-control">
+                  <label class="label pb-1">
+                    <span class="label-text font-semibold flex items-center gap-2"
+                      ><div class="w-3 h-3 rounded-full bg-info"></div>
+                      Pan</span
+                    >
+                    <span class="label-text-alt" id="panLabel">0.0</span>
+                  </label>
+                  <input
+                    type="range"
+                    id="panSlider"
+                    min="-1"
+                    max="1"
+                    step="0.01"
+                    value="0.0"
+                    class="range range-sm range-info"
+                  />
+                  <div class="w-full flex justify-between text-xs px-1">
+                    <span>L</span>
+                    <span>C</span>
+                    <span>R</span>
+                  </div>
+                </div>
+
+                <!-- Channel 1 Gain -->
+                <div class="form-control">
+                  <label class="label pb-1">
+                    <span class="label-text font-semibold flex items-center gap-2"
+                      ><div class="w-3 h-3 rounded-full bg-secondary"></div>
+                      Channel 1 Gain</span
+                    >
+                    <span class="label-text-alt" id="gainCh1Label">0.5</span>
+                  </label>
+                  <input
+                    type="range"
+                    id="gainCh1Slider"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value="0.5"
+                    class="range range-sm range-secondary"
+                  />
+                </div>
+
+                <!-- Channel 2 Gain -->
+                <div class="form-control">
+                  <label class="label pb-1">
+                    <span class="label-text font-semibold flex items-center gap-2"
+                      ><div class="w-3 h-3 rounded-full bg-accent"></div>
+                      Channel 2 Gain</span
+                    >
+                    <span class="label-text-alt" id="gainCh2Label">0.5</span>
+                  </label>
+                  <input
+                    type="range"
+                    id="gainCh2Slider"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value="0.5"
+                    class="range range-sm range-accent"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Audio Features Panel -->
-        <div
-          class="card bg-base-100/80 backdrop-blur-sm shadow-2xl border border-base-300/50"
-        >
-          <div class="card-body">
-            <h2 class="card-title text-2xl mb-6">
-              <div
-                class="w-10 h-10 rounded-lg bg-gradient-to-br from-secondary to-accent flex items-center justify-center"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="size-6"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="m9 9 10.5-3m0 6.553v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 1 1-.99-3.467l2.31-.66a2.25 2.25 0 0 0 1.632-2.163Zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 0 1-.99-3.467l2.31-.66A2.25 2.25 0 0 0 9 15.553Z"
-                  />
-                </svg>
-              </div>
-              <span
-                class="bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent"
-              >
-                Audio Features
-              </span>
-            </h2>
+            <!-- Divider -->
+            <div class="divider"></div>
 
-            <!-- Mute Toggle Control -->
-            <div class="form-control mb-6">
-              <div
-                class="card bg-gradient-to-br from-error/5 to-error/10 border border-error/20"
-              >
-                <div class="card-body p-4">
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                        class="size-6 text-error"
-                        id="muteIcon"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.5c-.69 0-1.25-.56-1.25-1.25V9.75c0-.69.56-1.25 1.25-1.25H6.75z"
-                        />
-                      </svg>
-                      <div>
-                        <h3 class="font-semibold">Master Audio</h3>
-                        <p class="text-xs text-base-content/70">Mute Control</p>
+            <!-- Audio Features Section -->
+            <div>
+              <h3 class="text-lg font-semibold mb-4">Audio Features</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Mute Toggle Control -->
+                <div class="form-control">
+                  <div
+                    class="card bg-gradient-to-br from-error/5 to-error/10 border border-error/20 h-full flex flex-col"
+                  >
+                    <div class="card-body p-4 flex-grow">
+                      <div class="flex items-center gap-3 mb-3">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="1.5"
+                          stroke="currentColor"
+                          class="size-6 text-error"
+                          id="muteIcon"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.5c-.69 0-1.25-.56-1.25-1.25V9.75c0-.69.56-1.25 1.25-1.25H6.75z"
+                          />
+                        </svg>
+                        <div>
+                          <h3 class="font-semibold">Master Audio</h3>
+                          <p class="text-xs text-base-content/70">Mute Control</p>
+                        </div>
                       </div>
-                    </div>
-                    <div class="flex flex-col items-center gap-2">
+                      <div class="flex-grow"></div>
                       <button
                         id="muteButton"
-                        class="btn btn-error btn-sm"
+                        class="btn btn-error btn-block btn-outline mt-auto"
                         aria-label="Mute button"
                       >
-                        Mute
+                        Toggle Mute
                       </button>
-                      <div
-                        class="text-xs text-base-content/70 flex items-center gap-1"
-                      >
-                        <span>mute:</span>
-                        <span class="font-semibold" id="muteStatus">off</span>
+                      <div class="mt-2 text-center">
+                        <span class="badge badge-ghost" id="muteStatus">off</span>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <!-- Voice Mode Control -->
-            <div class="form-control mb-6">
-              <div
-                class="card bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20"
-              >
-                <div class="card-body p-4">
-                  <div class="flex items-center gap-3 mb-3">
-                    <svg
-                      class="w-6 h-6 text-primary"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"
-                      />
-                    </svg>
-                    <div>
-                      <h3 class="font-semibold">Voice Mode</h3>
-                      <p class="text-xs text-base-content/70">Audio Presets</p>
-                    </div>
-                  </div>
-                  <button
-                    id="toggleVoiceModeBtn"
-                    type="button"
-                    class="btn btn-primary btn-block btn-outline"
+                <!-- Voice Mode Control -->
+                <div class="form-control">
+                  <div
+                    class="card bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 h-full flex flex-col"
                   >
-                    Toggle Voice Mode
-                  </button>
-                  <div class="mt-2 text-center">
-                    <div class="badge badge-ghost">
-                      <span id="currentMode" class="text-sm capitalize"
-                        >Current Mode: off</span
+                    <div class="card-body p-4 flex-grow">
+                      <div class="flex items-center gap-3 mb-3">
+                        <svg
+                          class="w-6 h-6 text-primary"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"
+                          />
+                        </svg>
+                        <div>
+                          <h3 class="font-semibold">Voice Mode</h3>
+                          <p class="text-xs text-base-content/70">Audio Presets</p>
+                        </div>
+                      </div>
+                      <div class="flex-grow"></div>
+                      <button
+                        id="toggleVoiceModeBtn"
+                        type="button"
+                        class="btn btn-primary btn-block btn-outline mt-auto"
                       >
+                        Toggle Voice Mode
+                      </button>
+                      <div class="mt-2 text-center">
+                        <div class="badge badge-ghost">
+                          <span id="currentMode" class="text-sm capitalize"
+                            >Current Mode: off</span
+                          >
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <!-- Audio Processing Controls -->
-            <div class="space-y-4">
-              <div class="form-control">
-                <div
-                  class="card bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20"
-                >
-                  <div class="card-body p-4">
-                    <div class="flex items-center gap-3 mb-3">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                        class="size-6 text-secondary"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
-                        />
-                      </svg>
+                <!-- Music Ducking Control -->
+                <div class="form-control">
+                  <div
+                    class="card bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20 h-full flex flex-col"
+                  >
+                    <div class="card-body p-4 flex-grow">
+                      <div class="flex items-center gap-3 mb-3">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="1.5"
+                          stroke="currentColor"
+                          class="size-6 text-secondary"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
+                          />
+                        </svg>
 
-                      <div>
-                        <h4 class="font-medium">Music Ducking</h4>
-                        <p class="text-xs text-base-content/70">
-                          Auto-adjust music levels
-                        </p>
+                        <div>
+                          <h4 class="font-medium">Music Ducking</h4>
+                          <p class="text-xs text-base-content/70">
+                            Auto-adjust music levels
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <button
-                      id="toggleDuckingBtn"
-                      class="btn btn-secondary btn-outline btn-block"
-                    >
-                      Toggle Ducking
-                    </button>
-                    <div class="mt-2 text-center">
-                      <span class="badge badge-ghost" id="musicDucking"
-                        >Ducking: off</span
+                      <div class="flex-grow"></div>
+                      <button
+                        id="toggleDuckingBtn"
+                        class="btn btn-secondary btn-block btn-outline mt-auto"
                       >
+                        Toggle Ducking
+                      </button>
+                      <div class="mt-2 text-center">
+                        <span class="badge badge-ghost" id="musicDucking"
+                          >Ducking: off</span
+                        >
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="form-control">
-                <div
-                  class="card bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20"
-                >
-                  <div class="card-body p-4">
-                    <div class="flex items-center gap-3 mb-3">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                        class="size-6 text-accent"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"
-                        />
-                      </svg>
+                <!-- Feedback Control -->
+                <div class="form-control">
+                  <div
+                    class="card bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 h-full flex flex-col"
+                  >
+                    <div class="card-body p-4 flex-grow">
+                      <div class="flex items-center gap-3 mb-3">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="1.5"
+                          stroke="currentColor"
+                          class="size-6 text-accent"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"
+                          />
+                        </svg>
 
-                      <div>
-                        <h4 class="font-medium">Audio Feedback</h4>
-                        <p class="text-xs text-base-content/70">
-                          Feedback suppression
-                        </p>
+                        <div>
+                          <h4 class="font-medium">Audio Feedback</h4>
+                          <p class="text-xs text-base-content/70">
+                            Feedback suppression
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <button
-                      id="toggleFeedbackBtn"
-                      class="btn btn-accent btn-outline btn-block"
-                    >
-                      Toggle Feedback Control
-                    </button>
-                    <div class="mt-2 text-center">
-                      <span class="badge badge-ghost" id="feedback"
-                        >Feedback: off</span
+                      <div class="flex-grow"></div>
+                      <button
+                        id="toggleFeedbackBtn"
+                        class="btn btn-accent btn-block btn-outline mt-auto"
                       >
+                        Toggle Feedback Control
+                      </button>
+                      <div class="mt-2 text-center">
+                        <span class="badge badge-ghost" id="feedback"
+                          >Feedback: off</span
+                        >
+                      </div>
                     </div>
                   </div>
                 </div>

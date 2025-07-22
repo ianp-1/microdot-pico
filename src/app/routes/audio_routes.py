@@ -1,7 +1,8 @@
 """
 API route handlers for audio system controls
 """
-from ..utils import create_success_response, create_error_response, ValidationError, validate_eq_update, validate_dsp_mixer_update, safe_json_parse
+from ..utils import create_success_response, create_error_response, ValidationError, validate_eq_update, safe_json_parse
+from model.utils import validate_dsp_mixer_update
 from ..logger import api_logger
 from ..config import SERVER_NAME, VERSION
 from dsp import dsp_state
@@ -157,9 +158,6 @@ class AudioRoutes:
             
             if not param or value is None:
                 return create_error_response("Missing required parameters: param, value")
-            
-            # Validate parameter values
-            validate_dsp_mixer_update(param, value)
             
             # Update DSP state
             success = dsp_state.set_param(param, value)

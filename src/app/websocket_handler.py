@@ -3,7 +3,7 @@ WebSocket message handlers
 """
 import json
 from .config import WS_MESSAGES
-from .utils import ValidationError, validate_eq_update, validate_dsp_mixer_update
+from .utils import ValidationError, validate_eq_update
 from .logger import ws_logger
 
 class WebSocketHandler:

@@ -56,7 +56,7 @@ class AudioModel:
     
     def set_dsp_mixer_param(self, param, value):
         """Set DSP mixer parameter"""
-        from .utils import validate_dsp_mixer_update
+        from model.utils import validate_dsp_mixer_update
         param, value = validate_dsp_mixer_update(param, value)
         dsp_state.set_param(param, value)
     

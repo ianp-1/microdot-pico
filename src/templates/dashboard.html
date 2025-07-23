@@ -724,10 +724,10 @@
               </span>
             </h2>
 
-            <!-- DSP Mixer Section -->
+            <!-- UART Command Section -->
             <div class="mb-6">
-              <h3 class="text-lg font-semibold mb-4">DSP Mixer</h3>
-              <!-- DSP Mixer Values Display -->
+              <h3 class="text-lg font-semibold mb-4">UART Commands</h3>
+              <!-- UART Command Values Display -->
               <div
                 class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-base-200/50 rounded-xl border border-base-300/30"
               >
@@ -740,13 +740,13 @@
                 <div
                   class="text-center p-2 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-lg border border-secondary/20"
                 >
-                  <div class="text-xs text-secondary font-semibold">CH 1</div>
+                  <div class="text-xs text-secondary font-semibold">G1</div>
                   <div class="text-lg font-mono" id="gainCh1Value">0.5</div>
                 </div>
                 <div
                   class="text-center p-2 bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg border border-accent/20"
                 >
-                  <div class="text-xs text-accent font-semibold">CH 2</div>
+                  <div class="text-xs text-accent font-semibold">G2</div>
                   <div class="text-lg font-mono" id="gainCh2Value">0.5</div>
                 </div>
                 <div
@@ -757,12 +757,13 @@
                 </div>
               </div>
 
-              <!-- DSP Mixer Controls -->
+              <!-- UART Command Controls -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                 <!-- Master Gain -->
                 <div class="form-control">
                   <label class="label pb-1">
-                    <span class="label-text font-semibold flex items-center gap-2"
+                    <span
+                      class="label-text font-semibold flex items-center gap-2"
                       ><div class="w-3 h-3 rounded-full bg-primary"></div>
                       Master Gain</span
                     >
@@ -782,7 +783,8 @@
                 <!-- Pan -->
                 <div class="form-control">
                   <label class="label pb-1">
-                    <span class="label-text font-semibold flex items-center gap-2"
+                    <span
+                      class="label-text font-semibold flex items-center gap-2"
                       ><div class="w-3 h-3 rounded-full bg-info"></div>
                       Pan</span
                     >
@@ -804,12 +806,13 @@
                   </div>
                 </div>
 
-                <!-- Channel 1 Gain -->
+                <!-- G1 Gain -->
                 <div class="form-control">
                   <label class="label pb-1">
-                    <span class="label-text font-semibold flex items-center gap-2"
+                    <span
+                      class="label-text font-semibold flex items-center gap-2"
                       ><div class="w-3 h-3 rounded-full bg-secondary"></div>
-                      Channel 1 Gain</span
+                      G1 Gain</span
                     >
                     <span class="label-text-alt" id="gainCh1Label">0.5</span>
                   </label>
@@ -817,19 +820,20 @@
                     type="range"
                     id="gainCh1Slider"
                     min="0"
-                    max="1"
+                    max="2"
                     step="0.01"
                     value="0.5"
                     class="range range-sm range-secondary"
                   />
                 </div>
 
-                <!-- Channel 2 Gain -->
+                <!-- G2 Gain -->
                 <div class="form-control">
                   <label class="label pb-1">
-                    <span class="label-text font-semibold flex items-center gap-2"
+                    <span
+                      class="label-text font-semibold flex items-center gap-2"
                       ><div class="w-3 h-3 rounded-full bg-accent"></div>
-                      Channel 2 Gain</span
+                      G2 Gain</span
                     >
                     <span class="label-text-alt" id="gainCh2Label">0.5</span>
                   </label>
@@ -837,7 +841,7 @@
                     type="range"
                     id="gainCh2Slider"
                     min="0"
-                    max="1"
+                    max="2"
                     step="0.01"
                     value="0.5"
                     class="range range-sm range-accent"
@@ -877,7 +881,9 @@
                         </svg>
                         <div>
                           <h3 class="font-semibold">Master Audio</h3>
-                          <p class="text-xs text-base-content/70">Mute Control</p>
+                          <p class="text-xs text-base-content/70">
+                            Mute Control
+                          </p>
                         </div>
                       </div>
                       <div class="flex-grow"></div>
@@ -889,7 +895,9 @@
                         Toggle Mute
                       </button>
                       <div class="mt-2 text-center">
-                        <span class="badge badge-ghost" id="muteStatus">off</span>
+                        <span class="badge badge-ghost" id="muteStatus"
+                          >off</span
+                        >
                       </div>
                     </div>
                   </div>
@@ -913,7 +921,9 @@
                         </svg>
                         <div>
                           <h3 class="font-semibold">Voice Mode</h3>
-                          <p class="text-xs text-base-content/70">Audio Presets</p>
+                          <p class="text-xs text-base-content/70">
+                            Audio Presets
+                          </p>
                         </div>
                       </div>
                       <div class="flex-grow"></div>

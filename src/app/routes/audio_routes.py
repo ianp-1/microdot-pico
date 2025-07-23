@@ -5,14 +5,14 @@ from ..utils import create_success_response, create_error_response, ValidationEr
 from model.utils import validate_dsp_mixer_update
 from ..logger import api_logger
 from ..config import SERVER_NAME, VERSION
-from dsp import dsp_state
 import utime
 
 class AudioRoutes:
     """Handler for audio-related API routes"""
     
-    def __init__(self, model):
+    def __init__(self, model, uart_service):
         self.model = model
+        self.uart_service = uart_service
         self.logger = api_logger
     
     def toggle_voice_mode(self, request):
@@ -159,10 +159,9 @@ class AudioRoutes:
             if not param or value is None:
                 return create_error_response("Missing required parameters: param, value")
             
-            # Update DSP state
-            success = dsp_state.set_param(param, value)
-            if not success:
-                return create_error_response(f"Failed to update DSP parameter: {param}")
+            # Validate and send command
+            param, value = validate_dsp_mixer_update(param, value)
+            self.uart_service.send_command(param, value)
             
             self.logger.info(f"DSP mixer updated: {param} = {value}")
             return create_success_response(f"DSP mixer {param} updated successfully", {

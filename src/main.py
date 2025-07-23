@@ -1,4 +1,3 @@
-import _thread
 from lib.microdot import Microdot, send_file
 from lib.microdot.websocket import with_websocket
 import uasyncio as asyncio
@@ -10,11 +9,7 @@ from app.routes.wifi_routes import WiFiRoutes
 from app.routes.audio_routes import AudioRoutes
 from app.config import SERVER_PORT
 from app.logger import main_logger
-from dsp import dsp_state
-from dsp.dualcore_withdsp_nonblock import audio_core_task, async_i2s_consumer
-
-# === Start DSP on Core 1 ===
-_thread.start_new_thread(audio_core_task, ())
+from app.uart_service import UARTService
 
 # === Core 0 functions below ===
 
@@ -22,11 +17,12 @@ _thread.start_new_thread(audio_core_task, ())
 app = Microdot()
 model = AudioModel()
 wifi_manager = WiFiManager()
+uart_service = UARTService()
 
 # === Route handlers ===
-ws_handler = WebSocketHandler(model)
+ws_handler = WebSocketHandler(model, uart_service)
 wifi_routes = WiFiRoutes(wifi_manager)
-audio_routes = AudioRoutes(model)
+audio_routes = AudioRoutes(model, uart_service)
 
 # Static routes
 @app.route('/')
@@ -62,7 +58,7 @@ def current_state_json(request):
     """Return current system state as JSON"""
     return audio_routes.get_current_state_json(request)
 
-@app.route('/current-eq-json')  
+@app.route('/current-eq-json')
 def current_eq_json(request):
     """Return current EQ values as JSON"""
     return audio_routes.get_current_eq_json(request)
@@ -71,11 +67,6 @@ def current_eq_json(request):
 def update_eq(request):
     """Update EQ values via HTTP POST"""
     return audio_routes.update_eq(request)
-
-@app.post('/update-dsp-mixer')
-def update_dsp_mixer(request):
-    """Update DSP mixer parameters via HTTP POST"""
-    return audio_routes.update_dsp_mixer(request)
 
 @app.route('/health')
 def health_check(request):
@@ -139,12 +130,9 @@ def wifi_save_station_config(request):
 def wifi_save_ap_config(request):
     return wifi_routes.save_ap_config(request)
 
-# === DSP routes ===
 @app.post('/audio/mute')
 def audio_mute(request):
     return audio_routes.toggle_mute(request)
-
-# Mute functionality is also handled via WebSocket
 
 # === Async setup ===
 async def setup_network():
@@ -160,7 +148,6 @@ async def setup_background_tasks():
     main_logger.info("Starting background tasks...")
     try:
         asyncio.create_task(model.monitor_dials_loop())
-        asyncio.create_task(async_i2s_consumer())
         main_logger.info("Background tasks started successfully")
     except Exception as e:
         main_logger.exception("Background tasks error", e)
@@ -168,10 +155,6 @@ async def setup_background_tasks():
 
 async def main():
     main_logger.info(f"Starting Audio Dashboard on port {SERVER_PORT}...")
-    
-    # Initialize DSP state
-    dsp_state.initialize_dsp_state()
-    
     asyncio.create_task(setup_network())
     asyncio.create_task(setup_background_tasks())
     await app.start_server(port=SERVER_PORT)
@@ -181,6 +164,7 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         main_logger.info("Server stopped by user")
+        uart_service.deinit()
     except Exception as e:
         main_logger.exception("Fatal error", e)
         machine.reset()

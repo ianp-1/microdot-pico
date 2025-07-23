@@ -27,7 +27,7 @@ WS_MESSAGES = {
     'FEEDBACK_TOGGLE': 'toggle_feedback',
     'MUTE_TOGGLE': 'toggle_mute',
     'GET_STATE': 'get_current_state',
-    'DSP_MIXER_UPDATE': 'dsp_mixer_update'
+    'UART_COMMAND': 'uart_command'
 }
 
 # HTTP Status Codes

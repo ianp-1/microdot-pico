@@ -2,7 +2,7 @@ import WebSocketManager from "./web-socket-manager.js";
 import EQChart from "./eq-chart.js";
 import EQController from "./eq-controller.js";
 import ModeManager from "./mode-manager.js";
-import DSPMixerController from "./dsp-mixer-controller.js";
+import UARTController from "./uart-controller.js";
 
 export default class AudioDashboardApp {
   constructor() {
@@ -10,7 +10,7 @@ export default class AudioDashboardApp {
     this.eqChart = null;
     this.eqController = null;
     this.modeManager = null;
-    this.dspMixerController = null;
+    this.uartController = null;
 
     this.init();
   }
@@ -23,7 +23,7 @@ export default class AudioDashboardApp {
       ducking: (message) => this.handleDuckingUpdate(message),
       feedback: (message) => this.handleFeedbackUpdate(message),
       mute: (message) => this.handleMuteUpdate(message),
-      dsp_mixer: (message) => this.handleDSPMixerUpdate(message),
+      uart_command: (message) => this.handleUARTCommandUpdate(message),
       initial_state: (message) => this.handleInitialState(message),
       onOpen: () => {
         // Don't request initial data - server sends it automatically
@@ -41,8 +41,8 @@ export default class AudioDashboardApp {
     // Initialize Mode Manager
     this.modeManager = new ModeManager(this.wsManager);
 
-    // Initialize DSP Mixer Controller
-    this.dspMixerController = new DSPMixerController(this.wsManager);
+    // Initialize UART Controller
+    this.uartController = new UARTController(this.wsManager);
 
     // Connect toggle button to mode manager
     this.setupModeToggleButton();
@@ -77,9 +77,9 @@ export default class AudioDashboardApp {
       this.updateMuteDisplay(message.mute);
     }
 
-    // Update DSP mixer state
-    if (this.dspMixerController && message.dsp_mixer) {
-      this.dspMixerController.updateFromServer(message.dsp_mixer);
+    // Update UART controller state
+    if (this.uartController && message.uart_command) {
+      this.uartController.updateFromServer(message.uart_command);
     }
   }
 
@@ -199,9 +199,9 @@ export default class AudioDashboardApp {
     }
   }
 
-  handleDSPMixerUpdate(message) {
-    if (this.dspMixerController) {
-      this.dspMixerController.updateFromServer(message);
+  handleUARTCommandUpdate(message) {
+    if (this.uartController) {
+      this.uartController.updateFromServer(message);
     }
   }
 

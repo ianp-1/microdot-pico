@@ -27,16 +27,6 @@ class WebSocketManager:
         msg = json.dumps({"type": "mute", "enabled": enabled})
         self._broadcast(msg)
     
-    def broadcast_dsp_mixer_update(self, mixer_params):
-        msg = json.dumps({
-            "type": "dsp_mixer",
-            "master_gain": mixer_params["master_gain"],
-            "gain_ch1": mixer_params["gain_ch1"],
-            "gain_ch2": mixer_params["gain_ch2"],
-            "pan": mixer_params["pan"]
-        })
-        self._broadcast(msg)
-    
     def broadcast_eq_update(self, callback_data):
         # Handle both old format (just eq data) and new format (eq + control sources)
         if isinstance(callback_data, dict) and 'eq' in callback_data:

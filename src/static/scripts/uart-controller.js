@@ -1,22 +1,22 @@
-export default class DSPMixerController {
+export default class UARTController {
   constructor(wsManager) {
     this.wsManager = wsManager;
     this.controls = [
       {
         id: "masterGainSlider",
-        param: "master_gain",
+        param: "master",
         labelId: "masterGainLabel",
         valueId: "masterGainValue",
       },
       {
         id: "gainCh1Slider",
-        param: "gain_ch1",
+        param: "g1",
         labelId: "gainCh1Label",
         valueId: "gainCh1Value",
       },
       {
         id: "gainCh2Slider",
-        param: "gain_ch2",
+        param: "g2",
         labelId: "gainCh2Label",
         valueId: "gainCh2Value",
       },
@@ -57,7 +57,7 @@ export default class DSPMixerController {
 
   handleSliderChange(param, value) {
     this.wsManager.send({
-      action: "dsp_mixer_update",
+      action: "uart_command",
       param: param,
       value: value,
     });

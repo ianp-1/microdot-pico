@@ -3,7 +3,6 @@ from model.hardware.button_manager import ButtonManager
 from model.audio.eq_processor import EQProcessor
 from model.websocket.web_socket_manager import WebSocketManager
 from model.audio.voice_mode_manager import VoiceModeManager
-from dsp import dsp_state
 
 class AudioModel:
     def __init__(self):
@@ -42,9 +41,6 @@ class AudioModel:
         
         # EQ changes notify WebSocket clients
         self.eq_processor.add_update_callback(self.ws_manager.broadcast_eq_update)
-        
-        # DSP mixer changes notify WebSocket clients
-        dsp_state.add_mixer_change_callback(self.ws_manager.broadcast_dsp_mixer_update)
     
     @property
     def ws_clients(self):
@@ -53,12 +49,6 @@ class AudioModel:
     def set_target_eq(self, band, value, source='digital'):
         """Set target EQ value with source tracking"""
         self.eq_processor.set_target_eq(band, value, source)
-    
-    def set_dsp_mixer_param(self, param, value):
-        """Set DSP mixer parameter"""
-        from model.utils import validate_dsp_mixer_update
-        param, value = validate_dsp_mixer_update(param, value)
-        dsp_state.set_param(param, value)
     
     async def monitor_dials_loop(self, interval_ms=100):
         await self.eq_processor.monitor_loop(interval_ms)

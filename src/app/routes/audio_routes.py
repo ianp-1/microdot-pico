@@ -2,7 +2,7 @@
 API route handlers for audio system controls
 """
 from ..utils import create_success_response, create_error_response, ValidationError, validate_eq_update, safe_json_parse
-from model.utils import validate_dsp_mixer_update
+from model.utils import validate_uart_command
 from ..logger import api_logger
 from ..config import SERVER_NAME, VERSION
 import utime
@@ -160,7 +160,7 @@ class AudioRoutes:
                 return create_error_response("Missing required parameters: param, value")
             
             # Validate and send command
-            param, value = validate_dsp_mixer_update(param, value)
+            param, value = validate_uart_command(param, value)
             self.uart_service.send_command(param, value)
             
             self.logger.info(f"DSP mixer updated: {param} = {value}")

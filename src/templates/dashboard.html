@@ -12,10 +12,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Audio Dashboard</title>
-    <script src="/static/styling/chart.js"></script>
-    <link href="/static/styling/output.css" rel="stylesheet" />
-    <script src="/static/styling/theme-change.js"></script>
-    <script type="module" src="/static/scripts/script.js"></script>
+    <link href="/static/styling/output.css?v=1.2.4" rel="stylesheet" />
+    <script src="/static/styling/chart.js?v=1.2.4"></script>
+    <script src="/static/styling/theme-change.js?v=1.2.4"></script>
+    <script type="module" src="/static/scripts/script.js?v=1.2.4"></script>
   </head>
   <body class="bg-gradient-to-br from-base-100 to-base-200 min-h-screen p-6">
     <!-- Header Controls -->
@@ -774,7 +774,7 @@
                     id="masterGainSlider"
                     min="0"
                     max="2"
-                    step="0.01"
+                    step="0.1"
                     value="1.0"
                     class="range range-sm range-primary"
                   />
@@ -796,7 +796,7 @@
                       id="panSlider"
                       min="-1"
                       max="1"
-                      step="0.5"
+                      step="0.01"
                       value="0.0"
                       class="range range-sm range-info"
                     />

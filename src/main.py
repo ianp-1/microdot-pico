@@ -25,17 +25,20 @@ wifi_routes = WiFiRoutes(wifi_manager)
 audio_routes = AudioRoutes(model, uart_service)
 
 # Static routes
+# add max age to the parameters to enable caching for faster page loading 
+# max_age=31536000
 @app.route('/')
 def index(request):
     """Serve the main dashboard with compression support"""
-    return send_file('templates/dashboard.min.html', compressed=True,  file_extension='.gz')
+    return send_file('templates/dashboard.min.html', compressed=True,  file_extension='.gz', max_age=31536000)
 
 @app.route('/static/<path:path>')
 def static_files(request, path):
     """Serve static files with security checks"""
     if '..' in path:
         return 'Forbidden', 403
-    return send_file(f'static/{path}', compressed=True, file_extension='.gz')
+    return send_file(f'static/{path}', compressed=True, file_extension='.gz',max_age=31536000)
+
 
 # API routes - delegate to AudioRoutes class
 @app.post('/toggle-voice-mode')

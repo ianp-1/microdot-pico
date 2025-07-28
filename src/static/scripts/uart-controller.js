@@ -81,4 +81,8 @@ export default class UARTController {
   updateFromServer(mixerData) {
     this.updateValueDisplay(mixerData);
   }
+
+  handleStateUpdate(state) {
+    this.updateValueDisplay(state);
+  }
 }

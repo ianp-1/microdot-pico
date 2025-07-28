@@ -12,12 +12,6 @@ class WebSocketHandler:
         self.model = model
         self.uart_service = uart_service
         self.logger = ws_logger
-        self.uart_state = {
-            "master": 0,
-            "g1": 0,
-            "g2": 0,
-            "pan": 0
-        }
         self.handlers = {
             WS_MESSAGES['PING']: self._handle_ping,
             WS_MESSAGES['VOICE_MODE_TOGGLE']: self._handle_voice_mode_toggle,
@@ -50,7 +44,7 @@ class WebSocketHandler:
             'ducking': self.model.voice_mode_manager.ducking_enabled,
             'mute': self.model.voice_mode_manager.get_mute_status(),
             'eq': self._get_eq_state(),
-            'uart': self.uart_state,
+            'uart': self.model.uart_manager.get_state(),
         }
         await ws.send(json.dumps(initial_state))
         self.logger.info("Sent initial state to client")
@@ -128,7 +122,7 @@ class WebSocketHandler:
             'type': WS_MESSAGES['INITIAL_STATE'],
             'mode': self.model.voice_mode_manager.current_mode,
             'eq': self._get_eq_state(),
-            'uart': self.uart_state,
+            'uart': self.model.uart_manager.get_state(),
         }
         await ws.send(json.dumps(state_data))
         self.logger.info("Sent current state")
@@ -143,11 +137,9 @@ class WebSocketHandler:
 
     async def _broadcast_uart_state(self):
         """Broadcast the current UART state to all clients."""
-        message = {
-            'type': WS_MESSAGES['UART_STATE_UPDATE'],
-            'state': self.uart_state
-        }
-        await self.model.ws_manager.broadcast(json.dumps(message))
+        # Note: This method is no longer needed since the UART manager
+        # handles broadcasting automatically via callbacks
+        pass
 
     async def _handle_uart_command(self, ws, data):
         """Handle UART command"""
@@ -162,10 +154,8 @@ class WebSocketHandler:
             self.uart_service.send_command(param, value)
             self.logger.info(f"UART command sent: {param} = {value}")
 
-            # Update and broadcast state
-            if param in self.uart_state:
-                self.uart_state[param] = value
-                await self._broadcast_uart_state()
+            # Update model state (this will automatically broadcast via callbacks)
+            self.model.update_uart_param(param, value)
             
         except ValidationError as e:
             self.logger.error(f"UART validation error: {e}")

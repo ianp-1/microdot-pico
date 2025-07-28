@@ -46,6 +46,14 @@ class WebSocketManager:
         })
         self._broadcast(msg)
     
+    def broadcast_uart_state(self, uart_state):
+        msg = json.dumps({"type": "uart_state_update", "state": uart_state})
+        self._broadcast(msg)
+    
+    def broadcast(self, message):
+        """Generic broadcast method for custom messages"""
+        self._broadcast(message)
+    
     def _broadcast(self, message):
         for ws in list(self.clients):
             try:

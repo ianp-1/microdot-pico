@@ -18,10 +18,10 @@ CS_PIN = Pin(13)
 
 # -- I2S on I2S(0) --
 I2S_ID = 0
-SCK_I2S_PIN = Pin(8)
-WS_I2S_PIN = Pin(9)
-SD_I2S_PIN = Pin(6)
-XMT_PIN = Pin(16, Pin.OUT)
+SCK_I2S_PIN = Pin(7)
+WS_I2S_PIN = Pin(8)
+SD_I2S_PIN = Pin(6) 
+XMT_PIN = Pin(15, Pin.OUT)
 
 # -- UART on UART(0) --
 # Default pins are GP0 (TX) and GP1 (RX)
@@ -32,7 +32,7 @@ BAUD_RATE = 115200
 WAV_FILE_1 = "audio1.wav"
 WAV_FILE_2 = "audio2.wav"
 WAV_SAMPLE_SIZE_IN_BITS = 16
-SAMPLE_RATE_IN_HZ = 24000
+SAMPLE_RATE_IN_HZ = 16000
 FORMAT = I2S.STEREO
 MONO_BUFFER_SIZE = 8192
 I2S_BUFFER_SIZE = 32768
@@ -214,3 +214,4 @@ if __name__ == "__main__":
         print("\nCtrl+C detected. Stopping...")
     finally:
         audio_running = False
+

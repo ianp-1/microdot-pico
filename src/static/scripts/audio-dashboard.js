@@ -24,7 +24,8 @@ export default class AudioDashboardApp {
       feedback: (message) => this.handleFeedbackUpdate(message),
       mute: (message) => this.handleMuteUpdate(message),
       uart_command: (message) => this.handleUARTCommandUpdate(message),
-      uart_state_update: (message) => this.uartController.handleStateUpdate(message.state),
+      uart_state_update: (message) =>
+        this.uartController.handleStateUpdate(message.state),
       initial_state: (message) => this.handleInitialState(message),
       onOpen: () => {
         // Don't request initial data - server sends it automatically
@@ -99,6 +100,22 @@ export default class AudioDashboardApp {
           this.eqController.updateControlStatus(band, source);
         });
       }
+
+      // Always send UART command for each band (low, mid, high)
+      ["low", "mid", "high"].forEach((band) => {
+        if (typeof message[band] === "number") {
+          // Map band to UART param name if needed (e.g., g1, g2, etc.)
+          let uartParam = band;
+          if (band === "low") uartParam = "g1";
+          else if (band === "mid") uartParam = "g2";
+          else if (band === "high") uartParam = "g3";
+          this.wsManager.send({
+            action: "uart_command",
+            param: uartParam,
+            value: message[band],
+          });
+        }
+      });
     }
   }
 

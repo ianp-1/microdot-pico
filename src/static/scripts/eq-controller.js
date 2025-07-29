@@ -71,14 +71,25 @@ export default class EQController {
       value: value,
     });
 
-    // Send EQ-to-UART update for DSP control (only for low and high bands)
+    // Send UART command for gain control (only for low and high bands)
     if (band === "low" || band === "high") {
+      // Map EQ band to UART gain parameter
+      let uartParam = band === "low" ? "g1" : "g2";
+
+      // Convert EQ dB value (-12 to +12) to gain value (0.0 to 2.0)
+      // -12dB = 0.0, 0dB = 1.0, +12dB = 2.0
+      let gainValue = Math.max(0.0, Math.min(2.0, 1.0 + value / 12.0));
+
       this.wsManager.send({
-        action: "eq_uart_update",
-        band: band,
-        value: value,
+        action: "uart_command",
+        param: uartParam,
+        value: gainValue,
       });
-      console.log(`EQ->UART: ${band} = ${value}dB sent to DSP`);
+      console.log(
+        `EQ->UART: ${band} = ${value}dB -> ${uartParam} = ${gainValue.toFixed(
+          2
+        )}`
+      );
     }
 
     // Brief visual confirmation that value was sent

@@ -101,18 +101,20 @@ export default class AudioDashboardApp {
         });
       }
 
-      // Always send UART command for each band (low, mid, high)
-      ["low", "mid", "high"].forEach((band) => {
+      // Always send UART command for low and high bands only (skip mid)
+      ["low", "high"].forEach((band) => {
         if (typeof message[band] === "number") {
-          // Map band to UART param name if needed (e.g., g1, g2, etc.)
-          let uartParam = band;
-          if (band === "low") uartParam = "g1";
-          else if (band === "mid") uartParam = "g2";
-          else if (band === "high") uartParam = "g3";
+          // Map band to UART param name
+          let uartParam = band === "low" ? "g1" : "g2";
+          // Convert dB value (-12 to +12) to gain (0.0 to 2.0)
+          let gainValue = Math.max(
+            0.0,
+            Math.min(2.0, 1.0 + message[band] / 12.0)
+          );
           this.wsManager.send({
             action: "uart_command",
             param: uartParam,
-            value: message[band],
+            value: gainValue,
           });
         }
       });

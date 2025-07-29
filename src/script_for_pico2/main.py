@@ -11,8 +11,6 @@ from machine import I2S, Pin, SPI, UART, freq
 # Set a high clock frequency for better performance
 freq(200000000)
 
-print("Free heap after startup:", gc.mem_free())
-
 # -- SD Card on SPI1 --
 SPI_ID = 1
 SCK_PIN = Pin(10)
@@ -38,12 +36,12 @@ WAV_FILE_2 = "right.wav"  # Will be treated as Right channel input
 WAV_SAMPLE_SIZE_IN_BITS = 16
 SAMPLE_RATE_IN_HZ = 44000
 FORMAT = I2S.STEREO # The C module outputs stereo
-MONO_BUFFER_SIZE  = 32768  
-I2S_BUFFER_SIZE   = 32768 
+MONO_BUFFER_SIZE  = 32768
+I2S_BUFFER_SIZE   = 32768
 
 # -- EQ/Filter settings --
 # Crossover frequency for the 2-band EQ, normalized by sample rate.
-# E.g., 880 Hz crossover: 880 / 16000 = 0.055
+# E.g., 880 Hz crossover: 880 / 44000 = 0.02
 CROSSOVER_FC_NORM = 500 / SAMPLE_RATE_IN_HZ
 # Q factor for the crossover filters. 0.707 is a good general-purpose value.
 CROSSOVER_Q = 0.707
@@ -128,7 +126,6 @@ def main():
 
         # Diagnostic logging: garbage collect and measure memory
         gc.collect()
-        free_mem = gc.mem_free()
         start_time = time.ticks_us()
 
         try:
@@ -148,25 +145,18 @@ def main():
             bytes_to_process = min(bytes_read1, bytes_read2)
             if bytes_to_process == 0: return
 
-            # --- Panning/Balance Logic ---
-            # Adjust channel gains based on the pan parameter before sending to C module
-            gain_l = P_gain_ch1
-            gain_r = P_gain_ch2
-            if P_pan > 0:  # Pan towards right, reduce left channel gain
-                gain_l *= (1.0 - P_pan)
-            elif P_pan < 0:  # Pan towards left, reduce right channel gain
-                gain_r *= (1.0 + P_pan)
-
             # --- Call the C DSP function ---
-            # This is the core of the audio processing
+            # This is the core of the audio processing. All mixing (gains, pan) and EQ
+            # is now handled efficiently in the C module.
             audiodsp.process(
                 stereo_mv,      # Destination buffer (stereo)
-                wav1_mv,        # Source 1 (processed as left channel input)
-                wav2_mv,        # Source 2 (processed as right channel input)
+                wav1_mv,        # Source 1 (left channel input)
+                wav2_mv,        # Source 2 (right channel input)
                 lpf_l, hpf_l,   # Left channel filters
                 lpf_r, hpf_r,   # Right channel filters
-                gain_l,         # Final gain for channel 1
-                gain_r,         # Final gain for channel 2
+                P_gain_ch1,     # Channel 1 gain
+                P_gain_ch2,     # Channel 2 gain
+                P_pan,          # Pan (-1.0 to 1.0)
                 P_bass_l,       # Left bass gain
                 P_treble_l,     # Left treble gain
                 P_bass_r,       # Right bass gain
@@ -174,14 +164,15 @@ def main():
                 P_master_gain   # Master gain
             )
 
-            # Write the processed stereo data to the I2S output
+            # Write the processed stereo data to the I2S output.
+            # The C function processes 'bytes_to_process' worth of mono samples,
+            # producing twice that many bytes for the stereo output.
             audio_out.write(stereo_mv[:bytes_to_process * 2])
 
             # Diagnostic logging: measure execution time
             end_time = time.ticks_us()
             execution_time = time.ticks_diff(end_time, start_time)
-            print(f"Free heap in buffer fill: {free_mem}")
-            print(f"Buffer fill+write time: {execution_time} us")
+            #print(f"Buffer fill+write time: {execution_time} us")
 
         except Exception as e:
             print(f"Error in IRQ handler: {e}")
@@ -198,7 +189,7 @@ def main():
         print("Initializing SD card...")
         spi = SPI(SPI_ID, baudrate=1_000_000, sck=SCK_PIN, mosi=MOSI_PIN, miso=MISO_PIN)
         sd = SDCard(spi, CS_PIN)
-        sd.init_spi(22_999_999) # Run SPI at a high clock rate
+        sd.init_spi(23_999_999) # Run SPI at a high clock rate
         os.mount(sd, "/sd")
         print("SD card mounted.")
 
@@ -217,16 +208,12 @@ def main():
         )
         audio_out.irq(i2s_callback)
 
-        print("Free heap after I2S init:", gc.mem_free())
-
         # Open the WAV files for reading in binary mode
         wav1 = open(f"/sd/{WAV_FILE_1}", "rb")
         wav2 = open(f"/sd/{WAV_FILE_2}", "rb")
         # Skip the 44-byte WAV header
         wav1.seek(44)
         wav2.seek(44)
-
-        print("Free heap after SD card mount and WAV files open:", gc.mem_free())
 
         print("Priming I2S buffer...")
         fill_and_write_buffer(0)
@@ -295,4 +282,3 @@ if __name__ == "__main__":
         # This ensures audio_running is set to False to stop IRQs
         # even if cleanup in main() fails.
         audio_running = False
-

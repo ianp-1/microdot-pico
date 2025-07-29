@@ -16,6 +16,7 @@ class WebSocketHandler:
             WS_MESSAGES['PING']: self._handle_ping,
             WS_MESSAGES['VOICE_MODE_TOGGLE']: self._handle_voice_mode_toggle,
             WS_MESSAGES['EQ_UPDATE']: self._handle_eq_update,
+            WS_MESSAGES['EQ_UART_UPDATE']: self._handle_eq_uart_update,
             WS_MESSAGES['DUCKING_TOGGLE']: self._handle_ducking_toggle,
             WS_MESSAGES['FEEDBACK_TOGGLE']: self._handle_feedback_toggle,
             WS_MESSAGES['MUTE_TOGGLE']: self._handle_mute_toggle,
@@ -100,6 +101,60 @@ class WebSocketHandler:
             
         except ValidationError as e:
             self.logger.error(f"EQ validation error: {e}")
+    
+    async def _handle_eq_uart_update(self, ws, data):
+        """Handle EQ update that sends UART commands to DSP"""
+        try:
+            band = data.get('band')
+            value = data.get('value')
+            
+            # Validate input
+            band, value = validate_eq_update(band, value)
+            
+            # Convert EQ slider values (-12 to +12 dB) to DSP gain values (0.0 to 10.0)
+            # Map -12dB to 0.0, 0dB to 1.0, +12dB to 10.0
+            if value <= 0:
+                # Negative values: -12dB -> 0.0, 0dB -> 1.0
+                dsp_value = max(0.0, (value + 12) / 12)
+            else:
+                # Positive values: 0dB -> 1.0, +12dB -> 10.0
+                dsp_value = 1.0 + (value / 12) * 9.0
+            
+            # Map EQ bands to UART commands
+            # Low frequency controls both left and right bass
+            # High frequency controls both left and right treble
+            if band == 'low':
+                # Send bass commands for both left and right
+                param_l, value_l = validate_uart_command('bl', dsp_value)
+                param_r, value_r = validate_uart_command('br', dsp_value)
+                
+                self.uart_service.send_command(param_l, value_l)
+                self.uart_service.send_command(param_r, value_r)
+                self.logger.info(f"EQ->UART: {band} = {value}dB -> bl/br = {dsp_value:.2f}")
+                
+                # Update model state for both commands
+                self.model.update_uart_param(param_l, value_l)
+                self.model.update_uart_param(param_r, value_r)
+                
+            elif band == 'high':
+                # Send treble commands for both left and right  
+                param_l, value_l = validate_uart_command('tl', dsp_value)
+                param_r, value_r = validate_uart_command('tr', dsp_value)
+                
+                self.uart_service.send_command(param_l, value_l)
+                self.uart_service.send_command(param_r, value_r)
+                self.logger.info(f"EQ->UART: {band} = {value}dB -> tl/tr = {dsp_value:.2f}")
+                
+                # Update model state for both commands
+                self.model.update_uart_param(param_l, value_l)
+                self.model.update_uart_param(param_r, value_r)
+                
+            # Note: 'mid' band is ignored as requested
+            
+        except ValidationError as e:
+            self.logger.error(f"EQ UART validation error: {e}")
+        except Exception as e:
+            self.logger.exception("Error sending EQ UART command", e)
     
     async def _handle_ducking_toggle(self, ws, data):
         """Handle ducking toggle"""

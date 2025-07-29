@@ -64,12 +64,22 @@ export default class EQController {
     // Update control status
     this.updateControlStatus(band, "digital");
 
-    // Send to server via WebSocket (only when slider is released)
+    // Send regular EQ update to server via WebSocket
     this.wsManager.send({
       action: "eq_update",
       band: band,
       value: value,
     });
+
+    // Send EQ-to-UART update for DSP control (only for low and high bands)
+    if (band === "low" || band === "high") {
+      this.wsManager.send({
+        action: "eq_uart_update",
+        band: band,
+        value: value,
+      });
+      console.log(`EQ->UART: ${band} = ${value}dB sent to DSP`);
+    }
 
     // Brief visual confirmation that value was sent
     this.showValueSentConfirmation(band);

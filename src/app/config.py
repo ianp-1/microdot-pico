@@ -23,6 +23,7 @@ WS_MESSAGES = {
     'INITIAL_STATE': 'initial_state',
     'VOICE_MODE_TOGGLE': 'toggle_voice_mode',
     'EQ_UPDATE': 'eq_update',
+    'EQ_UART_UPDATE': 'eq_uart_update',
     'DUCKING_TOGGLE': 'toggle_ducking',
     'FEEDBACK_TOGGLE': 'toggle_feedback',
     'MUTE_TOGGLE': 'toggle_mute',

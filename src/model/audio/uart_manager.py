@@ -13,7 +13,11 @@ class UARTManager:
             "master": 0.0,
             "g1": 0.0,
             "g2": 0.0,
-            "pan": 0.0
+            "pan": 0.0,
+            "bl": 1.0,  # Bass left (default to 1.0 for flat response)
+            "tl": 1.0,  # Treble left
+            "br": 1.0,  # Bass right  
+            "tr": 1.0   # Treble right
         }
         
         # Callbacks for state changes
